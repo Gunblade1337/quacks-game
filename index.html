@@ -24,40 +24,40 @@
 <body class="min-h-screen flex flex-col items-center p-2 sm:p-4 selection:bg-amber-500 selection:text-slate-900">
 
     <!-- SETUP / LOBBY SCREEN -->
-    <div id="setup-screen" class="w-full max-w-xl bg-slate-800 rounded-2xl border border-slate-700 p-6 shadow-2xl space-y-6 my-auto z-10 relative">
-        <div class="text-center space-y-2">
+    <div id="setup-screen" class="w-full max-w-xl bg-slate-800 rounded-2xl border border-slate-700 p-6 shadow-2xl space-y-5 my-auto z-10 relative">
+        <div class="text-center space-y-1">
             <h1 class="text-3xl sm:text-4xl font-extrabold text-amber-400 tracking-wide">The Quacks of Quedlinburg</h1>
-            <p class="text-slate-400 text-sm">9-Round Pass & Play Edition with Secret Turns & Bonus Die</p>
+            <p class="text-slate-400 text-xs">9-Round Pass & Play Edition with Secret Turns & Bonus Die</p>
         </div>
 
-        <div class="space-y-4">
+        <div class="space-y-3">
             <div>
-                <label class="block text-sm font-semibold text-slate-300 mb-2">Game Mode</label>
-                <div class="grid grid-cols-2 gap-3">
-                    <button id="mode-1p" onclick="setMode('1p')" class="py-3 px-4 rounded-xl border-2 font-bold text-sm transition-all border-amber-500 bg-amber-500/10 text-amber-400">
+                <label class="block text-xs font-semibold text-slate-300 mb-1.5">Game Mode</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <button id="mode-1p" onclick="setMode('1p')" class="py-2.5 px-3 rounded-xl border-2 font-bold text-xs transition-all border-amber-500 bg-amber-500/10 text-amber-400">
                         1 Player (Solo High Score)
                     </button>
-                    <button id="mode-2p" onclick="setMode('2p')" class="py-3 px-4 rounded-xl border-2 font-bold text-sm transition-all border-slate-600 bg-slate-700/50 text-slate-300 hover:border-slate-500">
+                    <button id="mode-2p" onclick="setMode('2p')" class="py-2.5 px-3 rounded-xl border-2 font-bold text-xs transition-all border-slate-600 bg-slate-700/50 text-slate-300 hover:border-slate-500">
                         2 Players (Secret Pass & Play)
                     </button>
                 </div>
             </div>
 
-            <div id="player-names-container" class="space-y-3">
+            <div id="player-names-container" class="space-y-2">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-400 mb-1">Player 1 Name</label>
-                    <input type="text" id="p1-name-input" value="Player 1" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-amber-500">
+                    <label class="block text-[11px] font-semibold text-slate-400 mb-0.5">Player 1 Name</label>
+                    <input type="text" id="p1-name-input" value="Player 1" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-amber-500">
                 </div>
                 <div id="p2-name-group" class="hidden">
-                    <label class="block text-xs font-semibold text-slate-400 mb-1">Player 2 Name</label>
-                    <input type="text" id="p2-name-input" value="Player 2" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-amber-500">
+                    <label class="block text-[11px] font-semibold text-slate-400 mb-0.5">Player 2 Name</label>
+                    <input type="text" id="p2-name-input" value="Player 2" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-amber-500">
                 </div>
             </div>
 
             <div>
-                <div class="flex justify-between items-center mb-2">
-                    <label class="block text-sm font-semibold text-slate-300">Ingredient Set Rules</label>
-                    <button onclick="toggleAlmanacModal()" class="text-xs text-amber-400 underline hover:text-amber-300">View Set Rules</button>
+                <div class="flex justify-between items-center mb-1.5">
+                    <label class="block text-xs font-semibold text-slate-300">Ingredient Set Rules</label>
+                    <button onclick="toggleAlmanacModal()" class="text-xs text-amber-400 underline hover:text-amber-300">View Rules & Goals</button>
                 </div>
                 <div class="grid grid-cols-4 gap-2">
                     <button id="set-1-btn" onclick="selectSet(1)" class="py-2 rounded-lg font-bold text-xs border border-amber-500 bg-amber-500/20 text-amber-300">Set 1</button>
@@ -66,9 +66,22 @@
                     <button id="set-4-btn" onclick="selectSet(4)" class="py-2 rounded-lg font-bold text-xs border border-slate-700 bg-slate-900 text-slate-400 hover:border-slate-600">Set 4</button>
                 </div>
             </div>
+
+            <!-- Campaign Goals Preview Box -->
+            <div class="bg-slate-900/80 rounded-xl p-3 border border-slate-700 space-y-1.5">
+                <div class="text-[11px] font-bold text-amber-400 uppercase tracking-wider flex justify-between items-center">
+                    <span>Campaign Target Goals (9-Round VP Tiers)</span>
+                </div>
+                <div class="grid grid-cols-2 gap-1.5 text-[11px] text-slate-300">
+                    <div class="bg-slate-800 p-1.5 rounded border border-slate-700/60">🎓 <strong>Apprentice:</strong> &lt;35 VP</div>
+                    <div class="bg-slate-800 p-1.5 rounded border border-slate-700/60">🧪 <strong>Journeyman:</strong> 35–54 VP</div>
+                    <div class="bg-slate-800 p-1.5 rounded border border-slate-700/60">🌟 <strong>Master:</strong> 55–74 VP</div>
+                    <div class="bg-slate-800 p-1.5 rounded border border-slate-700/60">👑 <strong>Guildmaster:</strong> 75+ VP</div>
+                </div>
+            </div>
         </div>
 
-        <button onclick="startGame()" class="w-full py-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-lg rounded-xl shadow-lg transition-all active:scale-[0.98]">
+        <button onclick="startGame()" class="w-full py-3.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-base rounded-xl shadow-lg transition-all active:scale-[0.98]">
             START 9-ROUND GAME
         </button>
     </div>
@@ -89,7 +102,6 @@
 
     <!-- ACTIVE GAME INTERFACE -->
     <div id="game-interface" class="w-full max-w-5xl space-y-4 hidden flex-col z-10 relative">
-        <!-- Top Navigation Bar -->
         <div class="bg-slate-800 rounded-xl p-3 border border-slate-700 flex justify-between items-center shadow-md">
             <div class="flex items-center space-x-2">
                 <span class="text-amber-400 font-extrabold text-lg">Quacks</span>
@@ -97,18 +109,16 @@
                 <span id="round-indicator" class="bg-emerald-500/20 text-emerald-400 text-xs font-bold px-2 py-0.5 rounded border border-emerald-500/30">Round 1 / 9</span>
             </div>
             <div class="flex items-center space-x-2">
-                <button onclick="toggleAlmanacModal()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-bold py-1 px-2.5 rounded-lg border border-slate-600">Almanac</button>
+                <button onclick="toggleAlmanacModal()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-bold py-1 px-2.5 rounded-lg border border-slate-600">Almanac & Goals</button>
             </div>
         </div>
 
-        <!-- Fortune Teller Banner -->
         <div id="fortune-banner" class="bg-indigo-950/80 border border-indigo-500/40 rounded-xl p-3 text-center shadow-inner hidden">
             <div class="text-[10px] uppercase font-bold text-indigo-300 tracking-wider">🔮 Fortune Teller Event Card (Active This Round)</div>
             <div id="fortune-title" class="font-extrabold text-amber-300 text-sm mt-0.5">Card Name</div>
             <div id="fortune-desc" class="text-xs text-slate-300">Modifier description text goes here.</div>
         </div>
 
-        <!-- Boards Container -->
         <div id="boards-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <!-- Player 1 Board Card -->
             <div id="p1-card" class="bg-slate-800 rounded-2xl p-4 border-2 border-amber-500/50 shadow-xl space-y-3 relative">
@@ -248,14 +258,13 @@
     </div>
 
     <!-- MODALS -->
-    <!-- Explosion Penalty Choice Modal -->
     <div id="explosion-choice-modal" class="fixed inset-0 modal-bg z-50 hidden flex items-center justify-center p-4">
         <div class="bg-slate-800 border-2 border-red-500/50 rounded-2xl max-w-md w-full p-6 text-center space-y-5 shadow-2xl relative overflow-hidden">
             <div class="absolute inset-0 bg-red-900/10 pointer-events-none"></div>
             <div class="text-4xl animate-bounce">💥</div>
             <div>
                 <h3 class="font-black text-2xl text-red-400">POT EXPLODED!</h3>
-                <p class="text-slate-300 text-xs mt-1">Your white sum exceeded the limit. You must choose your penalty reward for this round.</p>
+                <p class="text-slate-300 text-xs mt-1">Your white sum exceeded the limit. Choose your penalty reward for this round.</p>
             </div>
             
             <div class="grid grid-cols-2 gap-3 pt-2">
@@ -274,7 +283,6 @@
         </div>
     </div>
 
-    <!-- Dice Roll Modal -->
     <div id="dice-modal" class="fixed inset-0 modal-bg z-50 hidden flex items-center justify-center p-4">
         <div class="bg-slate-800 border-2 border-amber-500/50 rounded-2xl max-w-sm w-full p-6 text-center space-y-5 shadow-2xl relative overflow-hidden">
             <h3 class="font-black text-2xl text-amber-400">Bonus Die Phase</h3>
@@ -297,7 +305,6 @@
         </div>
     </div>
 
-    <!-- Bag Viewer -->
     <div id="bag-modal" class="fixed inset-0 modal-bg z-50 hidden flex items-center justify-center p-4">
         <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-700 pb-2">
@@ -309,7 +316,6 @@
         </div>
     </div>
 
-    <!-- Crow Modal -->
     <div id="crow-modal" class="fixed inset-0 modal-bg z-50 hidden flex items-center justify-center p-4">
         <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl">
             <div class="text-center space-y-1">
@@ -323,7 +329,6 @@
         </div>
     </div>
 
-    <!-- End Round Shop -->
     <div id="end-round-modal" class="fixed inset-0 modal-bg z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
         <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-xl w-full p-6 space-y-5 shadow-2xl my-auto">
             <div class="text-center space-y-1 border-b border-slate-700 pb-3">
@@ -362,7 +367,6 @@
         </div>
     </div>
 
-    <!-- Game Over -->
     <div id="game-over-modal" class="fixed inset-0 modal-bg z-50 hidden flex items-center justify-center p-4">
         <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 text-center space-y-5 shadow-2xl">
             <h2 class="text-3xl font-black text-amber-400">Campaign Completed!</h2>
@@ -374,14 +378,14 @@
         </div>
     </div>
 
-    <!-- Almanac -->
+    <!-- Almanac & Goals Modal -->
     <div id="almanac-modal" class="fixed inset-0 modal-bg z-50 hidden flex items-center justify-center p-4">
         <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-lg w-full p-5 space-y-4 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-700 pb-2">
-                <h3 id="almanac-title" class="font-bold text-lg text-amber-400">Ingredient Set Almanac</h3>
+                <h3 id="almanac-title" class="font-bold text-lg text-amber-400">Ingredient Set Almanac & Goals</h3>
                 <button onclick="toggleAlmanacModal()" class="text-slate-400 hover:text-white font-bold text-sm">✕</button>
             </div>
-            <div id="almanac-content" class="space-y-2 text-xs max-h-[60vh] overflow-y-auto pr-1"></div>
+            <div id="almanac-content" class="space-y-3 text-xs max-h-[60vh] overflow-y-auto pr-1"></div>
             <button onclick="toggleAlmanacModal()" class="w-full py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold text-xs rounded-xl transition-all active:scale-95">Close Almanac</button>
         </div>
     </div>
@@ -542,8 +546,8 @@
 
         function setMode(mode) {
             gameMode = mode;
-            document.getElementById('mode-1p').className = mode === '1p' ? 'py-3 px-4 rounded-xl border-2 font-bold text-sm transition-all border-amber-500 bg-amber-500/10 text-amber-400' : 'py-3 px-4 rounded-xl border-2 font-bold text-sm transition-all border-slate-600 bg-slate-700/50 text-slate-300 hover:border-slate-500';
-            document.getElementById('mode-2p').className = mode === '2p' ? 'py-3 px-4 rounded-xl border-2 font-bold text-sm transition-all border-amber-500 bg-amber-500/10 text-amber-400' : 'py-3 px-4 rounded-xl border-2 font-bold text-sm transition-all border-slate-600 bg-slate-700/50 text-slate-300 hover:border-slate-500';
+            document.getElementById('mode-1p').className = mode === '1p' ? 'py-2.5 px-3 rounded-xl border-2 font-bold text-xs transition-all border-amber-500 bg-amber-500/10 text-amber-400' : 'py-2.5 px-3 rounded-xl border-2 font-bold text-xs transition-all border-slate-600 bg-slate-700/50 text-slate-300 hover:border-slate-500';
+            document.getElementById('mode-2p').className = mode === '2p' ? 'py-2.5 px-3 rounded-xl border-2 font-bold text-xs transition-all border-amber-500 bg-amber-500/10 text-amber-400' : 'py-2.5 px-3 rounded-xl border-2 font-bold text-xs transition-all border-slate-600 bg-slate-700/50 text-slate-300 hover:border-slate-500';
             document.getElementById('p2-name-group').classList.toggle('hidden', mode === '1p');
         }
 
@@ -607,7 +611,6 @@
             activePlayerIndex = 0;
             currentTurnPurchases = [];
             
-            // If Pass & Play mode, prompt privacy screen for Player 1
             if (gameMode === '2p') {
                 showPrivacyInterceptor(0);
             } else {
@@ -1188,9 +1191,23 @@
         function closeBagModal() { document.getElementById('bag-modal').classList.add('hidden'); }
         
         function toggleAlmanacModal() {
-            document.getElementById('almanac-title').innerText = `Ingredient Set Almanac (Set ${currentSet})`;
-            document.getElementById('almanac-content').innerHTML = Object.entries(SET_ALMANAC[currentSet]).map(([color, desc]) => 
+            const almanacHtml = Object.entries(SET_ALMANAC[currentSet]).map(([color, desc]) => 
                 `<div class="p-2 bg-slate-900 rounded-lg border border-slate-700"><span class="font-bold text-amber-400 capitalize">${color}:</span> <span class="text-slate-300">${desc}</span></div>`).join('');
+            
+            const goalsHtml = `
+                <div class="p-3 bg-amber-500/10 rounded-xl border border-amber-500/30 space-y-1.5 mt-2">
+                    <div class="text-xs font-bold text-amber-400 uppercase tracking-wider">Campaign Target Goals (9-Round Tiers)</div>
+                    <div class="grid grid-cols-2 gap-1.5 text-xs text-slate-300">
+                        <div>🎓 <strong>Apprentice:</strong> &lt;35 VP</div>
+                        <div>🧪 <strong>Journeyman:</strong> 35–54 VP</div>
+                        <div>🌟 <strong>Master:</strong> 55–74 VP</div>
+                        <div>👑 <strong>Guildmaster:</strong> 75+ VP</div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('almanac-title').innerText = `Set ${currentSet} Rules & Target Goals`;
+            document.getElementById('almanac-content').innerHTML = almanacHtml + goalsHtml;
             document.getElementById('almanac-modal').classList.toggle('hidden');
         }
 
@@ -1201,4 +1218,3 @@
     </script>
 </body>
 </html>
-```eof
