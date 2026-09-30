@@ -25,7 +25,7 @@
 
     <!-- Version Badge -->
     <div class="fixed bottom-2 right-3 text-[10px] font-mono text-slate-500 pointer-events-none select-none z-30">
-        v1.0.3
+        v1.0.4
     </div>
 
     <!-- SETUP / LOBBY SCREEN -->
@@ -59,16 +59,49 @@
                 </div>
             </div>
 
-            <div>
-                <div class="flex justify-between items-center mb-1.5">
-                    <label class="block text-xs font-semibold text-slate-300">Ingredient Set Rules</label>
-                    <button onclick="toggleAlmanacModal()" class="text-xs text-amber-400 underline hover:text-amber-300">View Rules & Goals</button>
+            <!-- Set Customization Grid -->
+            <div class="bg-slate-900/80 rounded-xl p-3 border border-slate-700 space-y-2">
+                <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+                    <label class="block text-xs font-semibold text-slate-300">Ingredient Set Mixer</label>
+                    <div class="space-x-1">
+                        <button onclick="setAll(1)" class="px-2 py-1 text-[9px] font-bold rounded bg-slate-700 hover:bg-slate-600 text-slate-300 transition-colors">All 1</button>
+                        <button onclick="setAll(2)" class="px-2 py-1 text-[9px] font-bold rounded bg-slate-700 hover:bg-slate-600 text-slate-300 transition-colors">All 2</button>
+                        <button onclick="setAll(3)" class="px-2 py-1 text-[9px] font-bold rounded bg-slate-700 hover:bg-slate-600 text-slate-300 transition-colors">All 3</button>
+                        <button onclick="setAll(4)" class="px-2 py-1 text-[9px] font-bold rounded bg-slate-700 hover:bg-slate-600 text-slate-300 transition-colors">All 4</button>
+                    </div>
                 </div>
-                <div class="grid grid-cols-4 gap-2">
-                    <button id="set-1-btn" onclick="selectSet(1)" class="py-2 rounded-lg font-bold text-xs border border-amber-500 bg-amber-500/20 text-amber-300">Set 1</button>
-                    <button id="set-2-btn" onclick="selectSet(2)" class="py-2 rounded-lg font-bold text-xs border border-slate-700 bg-slate-900 text-slate-400 hover:border-slate-600">Set 2</button>
-                    <button id="set-3-btn" onclick="selectSet(3)" class="py-2 rounded-lg font-bold text-xs border border-slate-700 bg-slate-900 text-slate-400 hover:border-slate-600">Set 3</button>
-                    <button id="set-4-btn" onclick="selectSet(4)" class="py-2 rounded-lg font-bold text-xs border border-slate-700 bg-slate-900 text-slate-400 hover:border-slate-600">Set 4</button>
+                
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="flex justify-between items-center bg-slate-800 p-1.5 rounded border border-slate-700">
+                        <span class="text-[10px] font-bold text-red-400">Red Toadstool</span>
+                        <select id="sel-red" onchange="updateSet('red', this.value)" class="bg-slate-900 text-[10px] text-white rounded border border-slate-600 px-1 py-0.5 outline-none font-bold">
+                            <option value="1">Set 1</option><option value="2">Set 2</option><option value="3">Set 3</option><option value="4">Set 4</option>
+                        </select>
+                    </div>
+                    <div class="flex justify-between items-center bg-slate-800 p-1.5 rounded border border-slate-700">
+                        <span class="text-[10px] font-bold text-blue-400">Blue Crow Skull</span>
+                        <select id="sel-blue" onchange="updateSet('blue', this.value)" class="bg-slate-900 text-[10px] text-white rounded border border-slate-600 px-1 py-0.5 outline-none font-bold">
+                            <option value="1">Set 1</option><option value="2">Set 2</option><option value="3">Set 3</option><option value="4">Set 4</option>
+                        </select>
+                    </div>
+                    <div class="flex justify-between items-center bg-slate-800 p-1.5 rounded border border-slate-700">
+                        <span class="text-[10px] font-bold text-green-400">Green Spider</span>
+                        <select id="sel-green" onchange="updateSet('green', this.value)" class="bg-slate-900 text-[10px] text-white rounded border border-slate-600 px-1 py-0.5 outline-none font-bold">
+                            <option value="1">Set 1</option><option value="2">Set 2</option><option value="3">Set 3</option><option value="4">Set 4</option>
+                        </select>
+                    </div>
+                    <div class="flex justify-between items-center bg-slate-800 p-1.5 rounded border border-slate-700">
+                        <span class="text-[10px] font-bold text-yellow-400">Yellow Mandrake</span>
+                        <select id="sel-yellow" onchange="updateSet('yellow', this.value)" class="bg-slate-900 text-[10px] text-white rounded border border-slate-600 px-1 py-0.5 outline-none font-bold">
+                            <option value="1">Set 1</option><option value="2">Set 2</option><option value="3">Set 3</option><option value="4">Set 4</option>
+                        </select>
+                    </div>
+                    <div class="flex justify-between items-center bg-slate-800 p-1.5 rounded border border-slate-700 col-span-2 sm:col-span-1">
+                        <span class="text-[10px] font-bold text-purple-400">Purple Ghost</span>
+                        <select id="sel-purple" onchange="updateSet('purple', this.value)" class="bg-slate-900 text-[10px] text-white rounded border border-slate-600 px-1 py-0.5 outline-none font-bold">
+                            <option value="1">Set 1</option><option value="2">Set 2</option><option value="3">Set 3</option><option value="4">Set 4</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
@@ -109,11 +142,11 @@
         <div class="bg-slate-800 rounded-xl p-3 border border-slate-700 flex justify-between items-center shadow-md">
             <div class="flex items-center space-x-2">
                 <span class="text-amber-400 font-extrabold text-lg">Quacks</span>
-                <span id="active-set-badge" class="bg-slate-900 text-amber-400 text-xs px-2 py-0.5 rounded border border-amber-500/30">Set 1</span>
+                <button onclick="toggleAlmanacModal()" id="active-set-badge" class="bg-slate-900 hover:bg-slate-700 text-amber-400 text-xs px-2 py-0.5 rounded border border-amber-500/30 transition-colors cursor-pointer">Sets Active</button>
                 <span id="round-indicator" class="bg-emerald-500/20 text-emerald-400 text-xs font-bold px-2 py-0.5 rounded border border-emerald-500/30">Round 1 / 9</span>
             </div>
             <div class="flex items-center space-x-2">
-                <button onclick="toggleAlmanacModal()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-bold py-1 px-2.5 rounded-lg border border-slate-600">Almanac & Goals</button>
+                <button onclick="toggleAlmanacModal()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-bold py-1 px-2.5 rounded-lg border border-slate-600">Almanac</button>
             </div>
         </div>
 
@@ -365,6 +398,7 @@
                     <span id="market-rubies-left" class="text-xs font-bold text-rose-400 bg-rose-500/20 px-2 py-0.5 rounded border border-rose-500/30">Rubies: 2</span>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-2" id="ruby-purchases-container">
+                    <!-- Buttons are dynamically inserted here -->
                 </div>
             </div>
 
@@ -396,7 +430,7 @@
     <div id="almanac-modal" class="fixed inset-0 modal-bg z-50 hidden flex items-center justify-center p-4">
         <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-lg w-full p-5 space-y-4 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-700 pb-2">
-                <h3 id="almanac-title" class="font-bold text-lg text-amber-400">Ingredient Set Almanac & Goals</h3>
+                <h3 id="almanac-title" class="font-bold text-lg text-amber-400">Active Ingredient Rules</h3>
                 <button onclick="toggleAlmanacModal()" class="text-slate-400 hover:text-white font-bold text-sm">✕</button>
             </div>
             <div id="almanac-content" class="space-y-3 text-xs max-h-[60vh] overflow-y-auto pr-1"></div>
@@ -436,37 +470,46 @@
 
         const SET_ALMANAC = {
             1: {
-                orange: "Pumpkin: Solid pot filler with no special ability.",
-                red: "Toadstool: +1 space if 1-2 Pumpkins in pot; +2 extra spaces if 3+ Pumpkins.",
-                blue: "Crow Skull: Draw candidate chips equal to value, choose 1 to place or discard.",
-                green: "Garden Spider: Evaluated End-of-Round. Earn 1 Ruby if a green chip is the very last or next-to-last chip placed.",
-                yellow: "Mandrake: Doubled value if placed immediately after a White chip.",
-                purple: "Ghost's Breath: Evaluated End-of-Round. +1 space if opponent has more Ghost chips in pot."
+                orange: "Solid pot filler with no special ability.",
+                red: "+1 space if 1-2 Pumpkins in pot; +2 extra spaces if 3+ Pumpkins.",
+                blue: "Draw candidate chips equal to value, choose 1 to place or discard.",
+                green: "Evaluated End-of-Round. Earn 1 Ruby if a green chip is the very last or next-to-last chip placed.",
+                yellow: "Doubled value if placed immediately after a White chip.",
+                purple: "Evaluated End-of-Round. +1 space if opponent has more Ghost chips in pot."
             },
             2: {
-                orange: "Pumpkin: Standard value.",
-                red: "Toadstool: Bonus coins equal to value if adjacent to Orange Pumpkins.",
-                blue: "Crow Skull: If potion explodes next chip, still receive BOTH VP and Coins.",
-                green: "Garden Spider: End-of-round bonus chips if placed near end of pot.",
-                yellow: "Mandrake: The very NEXT drawn chip after this Mandrake is moved twice as far.",
-                purple: "Ghost's Breath: End-of-round VP scaling based on total purple count."
+                orange: "Standard value.",
+                red: "Bonus coins equal to value if adjacent to Orange Pumpkins.",
+                blue: "If potion explodes next chip, still receive BOTH VP and Coins.",
+                green: "End-of-round bonus chips if placed near end of pot.",
+                yellow: "The very NEXT drawn chip after this Mandrake is moved twice as far.",
+                purple: "End-of-round VP scaling based on total purple count."
             },
             3: {
-                orange: "Pumpkin: Standard value.",
-                red: "Toadstool: Adds white value to red chip if placed directly after white.",
-                blue: "Crow Skull: Reveal top chip of bag; choose to place or return.",
-                green: "Garden Spider: If white sum equals EXACTLY 7, advance last chip by green value.",
-                yellow: "Mandrake: Increases white explosion threshold from 7 to 8 or 9.",
-                purple: "Ghost's Breath: End-of-round VP based on board zone index (10+, 20+, 30+)."
+                orange: "Standard value.",
+                red: "Adds white value to red chip if placed directly after white.",
+                blue: "Reveal top chip of bag; choose to place or return.",
+                green: "If white sum equals EXACTLY 7, advance last chip by green value.",
+                yellow: "Increases white explosion threshold from 7 to 8 or 9.",
+                purple: "End-of-round VP based on board zone index (10+, 20+, 30+)."
             },
             4: {
-                orange: "Pumpkin: Standard value.",
-                red: "Toadstool: If at least 1 red chip is in pot, subsequent White 1-chips move 2 spaces instead of 1 (but still count as 1 for exploding).",
-                blue: "Crow Skull: +1 VP for every blue chip in pot at turn end.",
-                green: "Garden Spider: In shop phase, you may pay 1 Ruby to move Droplet +1 space for each green chip placed last or next-to-last.",
-                yellow: "Mandrake: Bonus movement scales with total yellow count in pot.",
-                purple: "Ghost's Breath: Instant +1 Ruby if placed on an even-numbered space index."
+                orange: "Standard value.",
+                red: "If at least 1 red chip is in pot, subsequent White 1-chips move 2 spaces instead of 1 (but still count as 1 for exploding).",
+                blue: "+1 VP for every blue chip in pot at turn end.",
+                green: "In shop phase, you may pay 1 Ruby to move Droplet +1 space for each green chip placed last or next-to-last.",
+                yellow: "Bonus movement scales with total yellow count in pot.",
+                purple: "Instant +1 Ruby if placed on an even-numbered space index."
             }
+        };
+
+        // Holds individual custom set choices
+        let activeSets = {
+            red: 1,
+            blue: 1,
+            green: 1,
+            yellow: 1,
+            purple: 1
         };
 
         let audioCtx;
@@ -522,7 +565,6 @@
         }
 
         let gameMode = '1p';
-        let currentSet = 1;
         let currentRound = 1;
         let activePlayerIndex = 0;
         let currentShopperIndex = 0;
@@ -566,24 +608,25 @@
             document.getElementById('p2-name-group').classList.toggle('hidden', mode === '1p');
         }
 
-        function selectSet(setNum) {
-            currentSet = setNum;
-            for(let i=1; i<=4; i++) {
-                document.getElementById(`set-${i}-btn`).className = i === setNum ? 'py-2 rounded-lg font-bold text-xs border border-amber-500 bg-amber-500/20 text-amber-300' : 'py-2 rounded-lg font-bold text-xs border border-slate-700 bg-slate-900 text-slate-400 hover:border-slate-600';
-            }
+        function setAll(val) {
+            ['red', 'blue', 'green', 'yellow', 'purple'].forEach(color => {
+                activeSets[color] = parseInt(val);
+                document.getElementById(`sel-${color}`).value = val;
+            });
+        }
+
+        function updateSet(color, val) {
+            activeSets[color] = parseInt(val);
         }
 
         function startGame() {
             initAudio();
             players[0].name = document.getElementById('p1-name-input').value || "Player 1";
             players[1].name = document.getElementById('p2-name-input').value || "Player 2";
-            document.getElementById('p1-title').innerText = players[0].name;
-            document.getElementById('p2-title').innerText = players[1].name;
             document.getElementById('p2-card').classList.toggle('hidden', gameMode === '1p');
             document.getElementById('setup-screen').classList.add('hidden');
             document.getElementById('game-interface').classList.remove('hidden');
             document.getElementById('game-interface').classList.add('flex');
-            document.getElementById('active-set-badge').innerText = `Set ${currentSet}`;
 
             initRoundState();
             renderAll();
@@ -682,20 +725,20 @@
             let moveDist = chip.val;
 
             // Set 1 Red Toadstool
-            if (chip.color === 'red' && currentSet === 1) {
+            if (chip.color === 'red' && activeSets.red === 1) {
                 const pumpkinCount = p.drawnChips.filter(c => c.color === 'orange').length;
                 if (pumpkinCount >= 3) moveDist += 2;
                 else if (pumpkinCount >= 1) moveDist += 1;
             } 
             // Set 1 Yellow Mandrake
-            else if (chip.color === 'yellow' && currentSet === 1) {
+            else if (chip.color === 'yellow' && activeSets.yellow === 1) {
                 if (p.drawnChips.length > 0 && p.drawnChips[p.drawnChips.length - 1].color === 'white') {
                     moveDist *= 2;
                 }
             }
 
             // Set 2 Yellow Mandrake
-            if (currentSet === 2 && p.drawnChips.length > 0) {
+            if (activeSets.yellow === 2 && p.drawnChips.length > 0) {
                 const lastChip = p.drawnChips[p.drawnChips.length - 1];
                 if (lastChip.color === 'yellow') {
                     moveDist *= 2;
@@ -704,7 +747,7 @@
             }
 
             // Set 4 Red Toadstool (Boosts White 1s)
-            if (chip.color === 'white' && chip.val === 1 && currentSet === 4) {
+            if (chip.color === 'white' && chip.val === 1 && activeSets.red === 4) {
                 if (p.drawnChips.some(c => c.color === 'red')) {
                     moveDist = 2; // Moves 2 spaces, but value remains 1 for explosion
                     logEvent(`🔥 ${p.name}'s Red Toadstool (Set 4) boosted a White 1-chip to move 2 spaces!`);
@@ -721,14 +764,14 @@
             createParticles(pt.x, pt.y, getChipHex(chip.color));
             logEvent(`${p.name} drew ${chip.name} -> Moved to Space ${p.currentSpace}`);
 
-            if (chip.color === 'blue' && currentSet === 1) {
+            if (chip.color === 'blue' && activeSets.blue === 1) {
                 triggerCrowSkullAbility(pIdx, chip.val);
                 return;
             }
 
             const yellowCount = p.drawnChips.filter(c => c.color === 'yellow').length;
             let maxWhite = 7;
-            if (currentSet === 3) {
+            if (activeSets.yellow === 3) {
                 if (yellowCount >= 3) maxWhite = 9;
                 else if (yellowCount >= 1) maxWhite = 8;
             }
@@ -915,7 +958,7 @@
             
             const yellowCount = p.drawnChips.filter(c => c.color === 'yellow').length;
             let maxWhite = 7;
-            if (currentSet === 3) {
+            if (activeSets.yellow === 3) {
                 if (yellowCount >= 3) maxWhite = 9;
                 else if (yellowCount >= 1) maxWhite = 8;
             }
@@ -1109,7 +1152,7 @@
                 if (spaceData.ruby) p.rubies += 1;
 
                 // Set 1 Green Garden Spider Ruby Logic
-                if (currentSet === 1 && p.drawnChips.length > 0) {
+                if (activeSets.green === 1 && p.drawnChips.length > 0) {
                     const lastChip = p.drawnChips[p.drawnChips.length - 1];
                     const nextToLast = p.drawnChips.length > 1 ? p.drawnChips[p.drawnChips.length - 2] : null;
                     if (lastChip.color === 'green') p.rubies += 1;
@@ -1117,7 +1160,7 @@
                 }
                 
                 // Set 4 Green Garden Spider Droplet Tracking
-                if (currentSet === 4 && p.drawnChips.length > 0) {
+                if (activeSets.green === 4 && p.drawnChips.length > 0) {
                     const lastChip = p.drawnChips[p.drawnChips.length - 1];
                     const nextToLast = p.drawnChips.length > 1 ? p.drawnChips[p.drawnChips.length - 2] : null;
                     if (lastChip.color === 'green') p.greenSpiderUses += 1;
@@ -1157,13 +1200,9 @@
             document.getElementById('market-rubies-left').innerText = `Rubies: ${p.rubies}`;
 
             const flaskCost = (activeFortuneCard && activeFortuneCard.id === 'flask') ? 1 : 2;
-            document.getElementById('potion-cost-label').innerText = `Refill Potion Flask (${flaskCost} Rubies)`;
 
-            document.getElementById('ruby-droplet-btn').disabled = p.rubies < 2;
-            document.getElementById('ruby-potion-btn').disabled = (p.rubies < flaskCost || p.potionFull);
-
-            // Inject Set 4 Green Spider Button dynamically if applicable
-            const spiderBtnHtml = (currentSet === 4 && p.greenSpiderUses > 0) ? `
+            // Inject all buttons together dynamically to prevent null reference crashes
+            const spiderBtnHtml = (activeSets.green === 4 && p.greenSpiderUses > 0) ? `
                 <button onclick="buySpiderDroplet()" class="p-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed border border-green-500 rounded-lg text-left text-xs space-y-0.5 transition-all active:scale-95" ${p.rubies < 1 ? 'disabled' : ''}>
                     <div class="font-bold text-green-400">Spider Droplet (1 Ruby)</div>
                     <div class="text-slate-400 text-[10px]">Move droplet +1 (${p.greenSpiderUses} use${p.greenSpiderUses>1?'s':''} left)</div>
@@ -1176,7 +1215,7 @@
                     <div class="text-slate-400 text-[10px]">Permanently advances starting point</div>
                 </button>
                 <button id="ruby-potion-btn" onclick="buyPotionRefill()" class="p-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed border border-slate-600 rounded-lg text-left text-xs space-y-0.5 transition-all active:scale-95" ${p.rubies < flaskCost || p.potionFull ? 'disabled' : ''}>
-                    <div class="font-bold text-cyan-400" id="potion-cost-label">Refill Potion Flask (${flaskCost} Rubies)</div>
+                    <div class="font-bold text-cyan-400">Refill Potion Flask (${flaskCost} Rubies)</div>
                     <div class="text-slate-400 text-[10px]">Recharges empty potion</div>
                 </button>
                 ${spiderBtnHtml}
@@ -1339,8 +1378,14 @@
         function closeBagModal() { document.getElementById('bag-modal').classList.add('hidden'); }
         
         function toggleAlmanacModal() {
-            const almanacHtml = Object.entries(SET_ALMANAC[currentSet]).map(([color, desc]) => 
-                `<div class="p-2 bg-slate-900 rounded-lg border border-slate-700"><span class="font-bold text-amber-400 capitalize">${color}:</span> <span class="text-slate-300">${desc}</span></div>`).join('');
+            const almanacHtml = `
+                <div class="p-2 bg-slate-900 rounded-lg border border-slate-700"><span class="font-bold text-orange-400">Orange Pumpkin:</span> <span class="text-slate-300">${SET_ALMANAC[1].orange}</span></div>
+                <div class="p-2 bg-slate-900 rounded-lg border border-slate-700"><span class="font-bold text-red-400">Red Toadstool (Set ${activeSets.red}):</span> <span class="text-slate-300">${SET_ALMANAC[activeSets.red].red}</span></div>
+                <div class="p-2 bg-slate-900 rounded-lg border border-slate-700"><span class="font-bold text-blue-400">Blue Crow Skull (Set ${activeSets.blue}):</span> <span class="text-slate-300">${SET_ALMANAC[activeSets.blue].blue}</span></div>
+                <div class="p-2 bg-slate-900 rounded-lg border border-slate-700"><span class="font-bold text-green-400">Green Spider (Set ${activeSets.green}):</span> <span class="text-slate-300">${SET_ALMANAC[activeSets.green].green}</span></div>
+                <div class="p-2 bg-slate-900 rounded-lg border border-slate-700"><span class="font-bold text-yellow-400">Yellow Mandrake (Set ${activeSets.yellow}):</span> <span class="text-slate-300">${SET_ALMANAC[activeSets.yellow].yellow}</span></div>
+                <div class="p-2 bg-slate-900 rounded-lg border border-slate-700"><span class="font-bold text-purple-400">Purple Ghost (Set ${activeSets.purple}):</span> <span class="text-slate-300">${SET_ALMANAC[activeSets.purple].purple}</span></div>
+            `;
             
             const goalsHtml = `
                 <div class="p-3 bg-amber-500/10 rounded-xl border border-amber-500/30 space-y-1.5 mt-2">
@@ -1354,7 +1399,6 @@
                 </div>
             `;
 
-            document.getElementById('almanac-title').innerText = `Set ${currentSet} Rules & Target Goals`;
             document.getElementById('almanac-content').innerHTML = almanacHtml + goalsHtml;
             document.getElementById('almanac-modal').classList.toggle('hidden');
         }
