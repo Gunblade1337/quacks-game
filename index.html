@@ -25,7 +25,7 @@
 
     <!-- Version Badge -->
     <div class="fixed bottom-2 right-3 text-[10px] font-mono text-slate-500 pointer-events-none select-none z-30">
-        v1.0.1
+        v1.0.2
     </div>
 
     <!-- SETUP / LOBBY SCREEN -->
@@ -347,7 +347,7 @@
                     <h4 class="font-bold text-xs text-rose-400 uppercase tracking-wide">Ruby Purchases</h4>
                     <span id="market-rubies-left" class="text-xs font-bold text-rose-400 bg-rose-500/20 px-2 py-0.5 rounded border border-rose-500/30">Rubies: 2</span>
                 </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2" id="ruby-purchases-container">
                     <button id="ruby-droplet-btn" onclick="buyDroplet()" class="p-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed border border-slate-600 rounded-lg text-left text-xs space-y-0.5 transition-all active:scale-95">
                         <div class="font-bold text-emerald-400">+1 Droplet Space (2 Rubies)</div>
                         <div class="text-slate-400 text-[10px]">Permanently advances starting point</div>
@@ -356,6 +356,7 @@
                         <div class="font-bold text-cyan-400" id="potion-cost-label">Refill Potion Flask (2 Rubies)</div>
                         <div class="text-slate-400 text-[10px]">Recharges empty potion</div>
                     </button>
+                    <!-- Set 4 Spider Button will inject here dynamically if applicable -->
                 </div>
             </div>
 
@@ -452,9 +453,9 @@
             },
             4: {
                 orange: "Pumpkin: Standard value.",
-                red: "Toadstool: When present in pot, all subsequent White 1-chips move 2 spaces instead of 1.",
+                red: "Toadstool: If at least 1 red chip is in pot, subsequent White 1-chips move 2 spaces instead of 1 (but still count as 1 for exploding).",
                 blue: "Crow Skull: +1 VP for every blue chip in pot at turn end.",
-                green: "Garden Spider: +1 VP per green chip in pot at round end if not exploded.",
+                green: "Garden Spider: In shop phase, you may pay 1 Ruby to move Droplet +1 space for each green chip placed last or next-to-last.",
                 yellow: "Mandrake: Bonus movement scales with total yellow count in pot.",
                 purple: "Ghost's Breath: Instant +1 Ruby if placed on an even-numbered space index."
             }
@@ -540,6 +541,7 @@
             return {
                 name: name, droplet: 0, potionFull: true, vp: 0, rubies: 2, whiteSum: 0,
                 currentSpace: 0, exploded: false, explosionChoice: null, finished: false, drawnChips: [],
+                greenSpiderUses: 0,
                 bag: [
                     { color: 'white', val: 1, name: 'White 1' }, { color: 'white', val: 1, name: 'White 1' },
                     { color: 'white', val: 1, name: 'White 1' }, { color: 'white', val: 2, name: 'White 2' },
@@ -604,6 +606,7 @@
                 p.drawnChips = []; p.whiteSum = 0;
                 p.currentSpace = p.droplet;
                 p.exploded = false; p.finished = false; p.explosionChoice = null;
+                p.greenSpiderUses = 0;
 
                 if (activeFortuneCard && activeFortuneCard.id === 'feast') {
                     const whiteChip = { color: 'white', val: 1, name: 'White 1' };
@@ -678,7 +681,7 @@
             if (chip.color === 'white' && chip.val === 1 && currentSet === 4) {
                 if (p.drawnChips.some(c => c.color === 'red')) {
                     moveDist = 2; // Moves 2 spaces, but value remains 1 for explosion
-                    logEvent(`${p.name}'s Red Toadstool (Set 4) boosted a White 1-chip to move 2 spaces!`);
+                    logEvent(`🔥 ${p.name}'s Red Toadstool (Set 4) boosted a White 1-chip to move 2 spaces!`);
                 }
             }
 
@@ -1033,6 +1036,14 @@
                     if (lastChip.color === 'green') p.rubies += 1;
                     if (nextToLast && nextToLast.color === 'green') p.rubies += 1;
                 }
+                
+                // Set 4 Green Garden Spider Droplet Tracking
+                if (currentSet === 4 && p.drawnChips.length > 0) {
+                    const lastChip = p.drawnChips[p.drawnChips.length - 1];
+                    const nextToLast = p.drawnChips.length > 1 ? p.drawnChips[p.drawnChips.length - 2] : null;
+                    if (lastChip.color === 'green') p.greenSpiderUses += 1;
+                    if (nextToLast && nextToLast.color === 'green') p.greenSpiderUses += 1;
+                }
             });
 
             currentShopperIndex = 0;
@@ -1072,10 +1083,42 @@
             document.getElementById('ruby-droplet-btn').disabled = p.rubies < 2;
             document.getElementById('ruby-potion-btn').disabled = (p.rubies < flaskCost || p.potionFull);
 
+            // Inject Set 4 Green Spider Button dynamically if applicable
+            const spiderBtnHtml = (currentSet === 4 && p.greenSpiderUses > 0) ? `
+                <button onclick="buySpiderDroplet()" class="p-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed border border-green-500 rounded-lg text-left text-xs space-y-0.5 transition-all active:scale-95" ${p.rubies < 1 ? 'disabled' : ''}>
+                    <div class="font-bold text-green-400">Spider Droplet (1 Ruby)</div>
+                    <div class="text-slate-400 text-[10px]">Move droplet +1 (${p.greenSpiderUses} use${p.greenSpiderUses>1?'s':''} left)</div>
+                </button>
+            ` : '';
+            
+            document.getElementById('ruby-purchases-container').innerHTML = `
+                <button id="ruby-droplet-btn" onclick="buyDroplet()" class="p-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed border border-slate-600 rounded-lg text-left text-xs space-y-0.5 transition-all active:scale-95" ${p.rubies < 2 ? 'disabled' : ''}>
+                    <div class="font-bold text-emerald-400">+1 Droplet Space (2 Rubies)</div>
+                    <div class="text-slate-400 text-[10px]">Permanently advances starting point</div>
+                </button>
+                <button id="ruby-potion-btn" onclick="buyPotionRefill()" class="p-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed border border-slate-600 rounded-lg text-left text-xs space-y-0.5 transition-all active:scale-95" ${p.rubies < flaskCost || p.potionFull ? 'disabled' : ''}>
+                    <div class="font-bold text-cyan-400" id="potion-cost-label">Refill Potion Flask (${flaskCost} Rubies)</div>
+                    <div class="text-slate-400 text-[10px]">Recharges empty potion</div>
+                </button>
+                ${spiderBtnHtml}
+            `;
+
             const nextBtn = document.getElementById('shop-next-btn');
             nextBtn.innerText = (gameMode === '2p' && currentShopperIndex === 0) ? `FINISH ${p.name.toUpperCase()}'S SHOP & PASS TO PLAYER 2` : "ADVANCE TO NEXT ROUND";
 
             renderMarketCatalog();
+        }
+
+        function buySpiderDroplet() {
+            const p = players[currentShopperIndex];
+            if (p.rubies >= 1 && p.greenSpiderUses > 0) {
+                p.rubies -= 1;
+                p.droplet += 1;
+                p.greenSpiderUses -= 1;
+                playSound('coin');
+                logEvent(`${p.name} used Set 4 Spider: spent 1 Ruby -> Droplet moved to Space ${p.droplet}.`);
+                renderShopModalUI(); renderAll();
+            }
         }
 
         function advanceShop() {
