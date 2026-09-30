@@ -25,7 +25,7 @@
 
     <!-- Version Badge -->
     <div class="fixed bottom-2 right-3 text-[10px] font-mono text-slate-500 pointer-events-none select-none z-30">
-        v1.0.2
+        v1.0.3
     </div>
 
     <!-- SETUP / LOBBY SCREEN -->
@@ -72,7 +72,6 @@
                 </div>
             </div>
 
-            <!-- Campaign Goals Preview Box -->
             <div class="bg-slate-900/80 rounded-xl p-3 border border-slate-700 space-y-1.5">
                 <div class="text-[11px] font-bold text-amber-400 uppercase tracking-wider flex justify-between items-center">
                     <span>Campaign Target Goals (9-Round VP Tiers)</span>
@@ -175,6 +174,15 @@
                 </div>
 
                 <div id="p1-controls" class="space-y-2">
+                    <div class="bg-slate-900 rounded-lg p-2 border border-slate-700">
+                        <div class="flex justify-between text-[10px] font-bold mb-1">
+                            <span class="text-slate-400">Odds of Exploding (Next Draw)</span>
+                            <span id="p1-bust-text" class="text-emerald-400">0%</span>
+                        </div>
+                        <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                            <div id="p1-bust-bar" class="bg-emerald-500 h-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                    </div>
                     <div class="grid grid-cols-2 gap-2">
                         <button id="p1-draw-btn" onclick="drawChip(0)" class="py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm rounded-xl shadow-lg transition-all active:scale-[0.98]">
                             DRAW CHIP
@@ -239,6 +247,15 @@
                 </div>
 
                 <div id="p2-controls" class="space-y-2 opacity-50 pointer-events-none">
+                    <div class="bg-slate-900 rounded-lg p-2 border border-slate-700">
+                        <div class="flex justify-between text-[10px] font-bold mb-1">
+                            <span class="text-slate-400">Odds of Exploding (Next Draw)</span>
+                            <span id="p2-bust-text" class="text-emerald-400">0%</span>
+                        </div>
+                        <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                            <div id="p2-bust-bar" class="bg-emerald-500 h-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                    </div>
                     <div class="grid grid-cols-2 gap-2">
                         <button id="p2-draw-btn" onclick="drawChip(1)" class="py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm rounded-xl shadow-lg transition-all active:scale-[0.98]">
                             DRAW CHIP
@@ -348,15 +365,6 @@
                     <span id="market-rubies-left" class="text-xs font-bold text-rose-400 bg-rose-500/20 px-2 py-0.5 rounded border border-rose-500/30">Rubies: 2</span>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-2" id="ruby-purchases-container">
-                    <button id="ruby-droplet-btn" onclick="buyDroplet()" class="p-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed border border-slate-600 rounded-lg text-left text-xs space-y-0.5 transition-all active:scale-95">
-                        <div class="font-bold text-emerald-400">+1 Droplet Space (2 Rubies)</div>
-                        <div class="text-slate-400 text-[10px]">Permanently advances starting point</div>
-                    </button>
-                    <button id="ruby-potion-btn" onclick="buyPotionRefill()" class="p-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed border border-slate-600 rounded-lg text-left text-xs space-y-0.5 transition-all active:scale-95">
-                        <div class="font-bold text-cyan-400" id="potion-cost-label">Refill Potion Flask (2 Rubies)</div>
-                        <div class="text-slate-400 text-[10px]">Recharges empty potion</div>
-                    </button>
-                    <!-- Set 4 Spider Button will inject here dynamically if applicable -->
                 </div>
             </div>
 
@@ -539,7 +547,7 @@
 
         function createNewPlayerState(name) {
             return {
-                name: name, droplet: 0, potionFull: true, vp: 0, rubies: 2, whiteSum: 0,
+                name: name, droplet: 0, ratTails: 0, potionFull: true, vp: 0, rubies: 2, whiteSum: 0,
                 currentSpace: 0, exploded: false, explosionChoice: null, finished: false, drawnChips: [],
                 greenSpiderUses: 0,
                 bag: [
@@ -602,9 +610,19 @@
                 }
             }
 
+            let maxVP = Math.max(...players.map(p => p.vp));
+
             players.forEach(p => {
                 p.drawnChips = []; p.whiteSum = 0;
-                p.currentSpace = p.droplet;
+                
+                // Calculate Rat Tails Catch-up (Multiplayer only, from Round 2)
+                if (gameMode === '2p' && currentRound >= 2) {
+                    p.ratTails = Math.floor((maxVP - p.vp) / 2);
+                } else {
+                    p.ratTails = 0;
+                }
+                
+                p.currentSpace = p.droplet + p.ratTails;
                 p.exploded = false; p.finished = false; p.explosionChoice = null;
                 p.greenSpiderUses = 0;
 
@@ -615,6 +633,14 @@
                     p.whiteSum += 1;
                 }
             });
+
+            if (gameMode === '2p' && currentRound >= 2) {
+                players.forEach(p => {
+                    if (p.ratTails > 0) {
+                        logEvent(`🐀 Rat Tail Catch-up: ${p.name} places their rat ${p.ratTails} spaces ahead of their droplet.`);
+                    }
+                });
+            }
 
             activePlayerIndex = 0;
             currentTurnPurchases = [];
@@ -753,7 +779,9 @@
             if (!p.potionFull || p.exploded || p.drawnChips.length === 0) return;
             const lastChip = p.drawnChips.pop();
             if (lastChip.color === 'white') p.whiteSum -= lastChip.val;
-            p.currentSpace = Math.max(p.droplet, p.currentSpace - lastChip.val);
+            
+            // Adjust calculation based on rat tails so we don't drop below starting space
+            p.currentSpace = Math.max(p.droplet + p.ratTails, p.currentSpace - lastChip.val);
             p.potionFull = false;
             playSound('potion');
             logEvent(`${p.name} drank Potion! Returned ${lastChip.name}.`);
@@ -881,6 +909,44 @@
             processNextDiceRoller();
         }
 
+        function updateBustMeter(pIdx) {
+            const p = players[pIdx];
+            const prefix = pIdx === 0 ? 'p1' : 'p2';
+            
+            const yellowCount = p.drawnChips.filter(c => c.color === 'yellow').length;
+            let maxWhite = 7;
+            if (currentSet === 3) {
+                if (yellowCount >= 3) maxWhite = 9;
+                else if (yellowCount >= 1) maxWhite = 8;
+            }
+            
+            let safeRemaining = maxWhite - p.whiteSum;
+            let available = getUndrawnBag(p);
+            let explodeCount = 0;
+            
+            available.forEach(c => {
+                if (c.color === 'white' && c.val > safeRemaining) {
+                    explodeCount++;
+                }
+            });
+            
+            let pct = available.length === 0 ? 0 : Math.round((explodeCount / available.length) * 100);
+            if (p.exploded) pct = 100;
+            else if (p.finished) pct = 0;
+            
+            const textEl = document.getElementById(`${prefix}-bust-text`);
+            const barEl = document.getElementById(`${prefix}-bust-bar`);
+            
+            textEl.innerText = `${pct}%`;
+            barEl.style.width = `${pct}%`;
+            
+            let barColor = pct < 25 ? 'bg-emerald-500' : pct < 50 ? 'bg-amber-500' : 'bg-red-500';
+            let textColor = pct < 25 ? 'text-emerald-400' : pct < 50 ? 'text-amber-400' : 'text-red-400';
+            
+            barEl.className = `${barColor} h-full transition-all duration-300`;
+            textEl.className = `${textColor}`;
+        }
+
         function updateControlsState() {
             const p1Active = activePlayerIndex === 0 && !players[0].finished;
             const p2Active = activePlayerIndex === 1 && !players[1].finished && gameMode === '2p';
@@ -953,6 +1019,8 @@
         function renderAll() {
             renderPlayerBoard(0);
             if (gameMode === '2p') renderPlayerBoard(1);
+            updateBustMeter(0);
+            if (gameMode === '2p') updateBustMeter(1);
         }
 
         function renderPlayerBoard(pIdx) {
@@ -977,12 +1045,23 @@
                 }
             });
 
+            // Draw Droplet token
             if (coords[p.droplet]) {
                 ctx.beginPath(); ctx.arc(coords[p.droplet].x, coords[p.droplet].y, 10, 0, Math.PI*2);
                 ctx.fillStyle = '#10b981'; ctx.fill();
             }
 
-            let currPos = p.droplet;
+            // Draw Rat token
+            if (p.ratTails > 0) {
+                const ratPos = p.droplet + p.ratTails;
+                if (coords[ratPos]) {
+                    ctx.beginPath(); ctx.arc(coords[ratPos].x, coords[ratPos].y, 9, 0, Math.PI*2);
+                    ctx.fillStyle = '#64748b'; ctx.fill();
+                    ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 1; ctx.stroke();
+                }
+            }
+
+            let currPos = p.droplet + p.ratTails;
             p.drawnChips.forEach(chip => {
                 currPos = Math.min(33, currPos + chip.val);
                 if (coords[currPos]) {
