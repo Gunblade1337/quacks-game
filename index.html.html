@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Quacks of Quedlinburg</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            touch-action: manipulation;
+        }
+        .modal-bg {
+            background-color: rgba(15, 23, 42, 0.92);
+            backdrop-filter: blur(10px);
+        }
+        canvas {
+            touch-action: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center p-2 sm:p-4 selection:bg-amber-500 selection:text-slate-900">
+
+    <!-- SETUP / LOBBY SCREEN -->
+    <div id="setup-screen" class="w-full max-w-xl bg-slate-800 rounded-2xl border border-slate-700 p-6 shadow-2xl space-y-6 my-auto z-10 relative">
+        <div class="text-center space-y-2">
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-amber-400 tracking-wide">The Quacks of Quedlinburg</h1>
+            <p class="text-slate-400 text-sm">9-Round Pass & Play Edition with Secret Turns & Bonus Die</p>
+        </div>
+
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-semibold text-slate-300 mb-2">Game Mode</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <button id="mode-1p" onclick="setMode('1p')" class="py-3 px-4 rounded-xl border-2 font-bold text-sm transition-all border-amber-500 bg-amber-500/10 text-amber-400">
+                        1 Player (Solo High Score)
+                    </button>
+                    <button id="mode-2p" onclick="setMode('2p')" class="py-3 px-4 rounded-xl border-2 font-bold text-sm transition-all border-slate-600 bg-slate-700/50 text-slate-300 hover:border-slate-500">
+                        2 Players (Secret Pass & Play)
+                    </button>
+                </div>
+            </div>
+
+            <div id="player-names-container" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">Player 1 Name</label>
+                    <input type="text" id="p1-name-input" value="Player 1" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-amber-500">
+                </div>
+                <div id="p2-name-group" class="hidden">
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">Player 2 Name</label>
+                    <input type="text" id="p2-name-input" value="Player 2" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-amber-500">
+                </div>
+            </div>
+
+            <div>
+                <div class="flex justify-between items-center mb-2">
+                    <label class="block text-sm font-semibold text-slate-300">Ingredient Set Rules</label>
+                    <button onclick="toggleAlmanacModal()" class="text-xs text-amber-400 underline hover:text-amber-300">View Set Rules</button>
+                </div>
+                <div class="grid grid-cols-4 gap-2">
+                    <button id="set-1-btn" onclick="selectSet(1)" class="py-2 rounded-lg font-bold text-xs border border-amber-500 bg-amber-500/20 text-amber-300">Set 1</button>
+                    <button id="set-2-btn" onclick="selectSet(2)" class="py-2 rounded-lg font-bold text-xs border border-slate-700 bg-slate-900 text-slate-400 hover:border-slate-600">Set 2</button>
+                    <button id="set-3-btn" onclick="selectSet(3)" class="py-2 rounded-lg font-bold text-xs border border-slate-700 bg-slate-900 text-slate-400 hover:border-slate-600">Set 3</button>
+                    <button id="set-4-btn" onclick="selectSet(4)" class="py-2 rounded-lg font-bold text-xs border border-slate-700 bg-slate-900 text-slate-400 hover:border-slate-600">Set 4</button>
+                </div>
+            </div>
+        </div>
+
+        <button onclick="startGame()" class="w-full py-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-lg rounded-xl shadow-lg transition-all active:scale-[0.98]">
+            START 9-ROUND GAME
+        </button>
+    </div>
+
+    <!-- PASS & PLAY PRIVACY INTERCEPTOR MODAL -->
+    <div id="pass-privacy-modal" class="fixed inset-0 modal-bg z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-800 border-2 border-amber-500/60 rounded-2xl max-w-md w-full p-6 text-center space-y-6 shadow-2xl relative">
+            <div class="text-5xl">🔒</div>
+            <div class="space-y-2">
+                <h3 class="text-2xl font-black text-amber-400" id="privacy-title">Pass Device</h3>
+                <p class="text-slate-300 text-xs" id="privacy-desc">Please hand the device to the next player in secret so they cannot see your pot progress.</p>
+            </div>
+            <button onclick="unlockSecretTurn()" class="w-full py-4 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-base rounded-xl transition-all active:scale-95 shadow-lg">
+                I AM READY — REVEAL TURN
+            </button>
+        </div>
+    </div>
+
+    <!-- ACTIVE GAME INTERFACE -->
+    <div id="game-interface" class="w-full max-w-5xl space-y-4 hidden flex-col z-10 relative">
+        <!-- Top Navigation Bar -->
+        <div class="bg-slate-800 rounded-xl p-3 border border-slate-700 flex justify-between items-center shadow-md">
+            <div class="flex items-center space-x-2">
+                <span class="text-amber-400 font-extrabold text-lg">Quacks</span>
+                <span id="active-set-badge" class="bg-slate-900 text-amber-400 text-xs px-2 py-0.5 rounded border border-amber-500/30">Set 1</span>
+                <span id="round-indicator" class="bg-emerald-500/20 text-emerald-400 text-xs font-bold px-2 py-0.5 rounded border border-emerald-500/30">Round 1 / 9</span>
+            </div>
+            <div class="flex items-center space-x-2">
+                <button onclick="toggleAlmanacModal()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-bold py-1 px-2.5 rounded-lg border border-slate-600">Almanac</button>
+            </div>
+        </div>
+
+        <!-- Fortune Teller Banner -->
+        <div id="fortune-banner" class="bg-indigo-950/80 border border-indigo-500/40 rounded-xl p-3 text-center shadow-inner hidden">
+            <div class="text-[10px] uppercase font-bold text-indigo-300 tracking-wider">🔮 Fortune Teller Event Card (Active This Round)</div>
+            <div id="fortune-title" class="font-extrabold text-amber-300 text-sm mt-0.5">Card Name</div>
+            <div id="fortune-desc" class="text-xs text-slate-300">Modifier description text goes here.</div>
+        </div>
+
+        <!-- Boards Container -->
+        <div id="boards-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Player 1 Board Card -->
+            <div id="p1-card" class="bg-slate-800 rounded-2xl p-4 border-2 border-amber-500/50 shadow-xl space-y-3 relative">
+                <div class="flex justify-between items-center border-b border-slate-700/60 pb-2">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-3 h-3 rounded-full bg-amber-400"></div>
+                        <h2 id="p1-title" class="font-bold text-amber-300 text-base">Player 1</h2>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="openBagModal(0)" class="bg-slate-700 hover:bg-slate-600 text-cyan-300 text-[10px] font-bold py-1 px-2 rounded border border-cyan-500/30">🎒 Bag</button>
+                        <div class="text-xs font-semibold space-x-2">
+                            <span class="text-emerald-400">Coins: <strong id="p1-coins-val">0</strong></span>
+                            <span class="text-sky-400">VP: <strong id="p1-vp-val">0</strong></span>
+                            <span class="text-rose-400">Rubies: <strong id="p1-rubies-val">2</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="relative w-full aspect-square bg-slate-900 rounded-xl overflow-hidden border border-slate-700 flex items-center justify-center">
+                    <canvas id="p1-canvas" class="w-full h-full cursor-pointer"></canvas>
+                    <div id="p1-tooltip" class="absolute bottom-2 left-2 right-2 bg-slate-950/90 border border-slate-700 p-2 rounded-lg text-xs text-slate-200 pointer-events-none hidden shadow-lg text-center z-20">
+                        Hover space to inspect...
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2 text-center text-xs bg-slate-900/60 p-2 rounded-xl border border-slate-700/50">
+                    <div>
+                        <div class="text-slate-400">White Sum</div>
+                        <div id="p1-white-sum" class="font-bold text-slate-100 text-sm">0 / 7</div>
+                    </div>
+                    <div>
+                        <div class="text-slate-400">Position</div>
+                        <div id="p1-position" class="font-bold text-amber-400 text-sm">Space 0</div>
+                    </div>
+                    <div>
+                        <div class="text-slate-400">Potion</div>
+                        <div id="p1-potion-status" class="font-bold text-cyan-400 text-sm">Ready</div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900/80 rounded-xl p-2.5 border border-slate-700 space-y-1.5">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-[11px] font-bold text-amber-400 uppercase tracking-wider">Ingredients Placed</h3>
+                        <span id="p1-placed-count" class="text-[10px] text-slate-400">0 chips</span>
+                    </div>
+                    <div id="p1-placed-chips" class="flex flex-wrap gap-1.5 max-h-20 overflow-y-auto pr-1 text-xs">
+                        <span class="text-slate-500 text-[11px] italic">No chips drawn yet this round.</span>
+                    </div>
+                </div>
+
+                <div id="p1-controls" class="space-y-2">
+                    <div class="grid grid-cols-2 gap-2">
+                        <button id="p1-draw-btn" onclick="drawChip(0)" class="py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm rounded-xl shadow-lg transition-all active:scale-[0.98]">
+                            DRAW CHIP
+                        </button>
+                        <button id="p1-stop-btn" onclick="stopTurn(0)" class="py-3 bg-amber-600 hover:bg-amber-500 text-white font-extrabold text-sm rounded-xl shadow-lg transition-all active:scale-[0.98]">
+                            STOP DRAWING
+                        </button>
+                    </div>
+                    <button id="p1-potion-btn" onclick="usePotion(0)" class="w-full py-2 bg-slate-700 hover:bg-slate-600 text-cyan-300 font-bold text-xs rounded-lg border border-cyan-500/30 flex items-center justify-center space-x-1 transition-all active:scale-[0.98]">
+                        <span>Drink Potion (Return Last Chip)</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Player 2 Board Card -->
+            <div id="p2-card" class="bg-slate-800 rounded-2xl p-4 border border-slate-700 shadow-xl space-y-3 relative hidden">
+                <div class="flex justify-between items-center border-b border-slate-700/60 pb-2">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-3 h-3 rounded-full bg-slate-500"></div>
+                        <h2 id="p2-title" class="font-bold text-slate-300 text-base">Player 2</h2>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="openBagModal(1)" class="bg-slate-700 hover:bg-slate-600 text-cyan-300 text-[10px] font-bold py-1 px-2 rounded border border-cyan-500/30">🎒 Bag</button>
+                        <div class="text-xs font-semibold space-x-2">
+                            <span class="text-emerald-400">Coins: <strong id="p2-coins-val">0</strong></span>
+                            <span class="text-sky-400">VP: <strong id="p2-vp-val">0</strong></span>
+                            <span class="text-rose-400">Rubies: <strong id="p2-rubies-val">2</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="relative w-full aspect-square bg-slate-900 rounded-xl overflow-hidden border border-slate-700 flex items-center justify-center">
+                    <canvas id="p2-canvas" class="w-full h-full cursor-pointer"></canvas>
+                    <div id="p2-tooltip" class="absolute bottom-2 left-2 right-2 bg-slate-950/90 border border-slate-700 p-2 rounded-lg text-xs text-slate-200 pointer-events-none hidden shadow-lg text-center z-20">
+                        Hover space to inspect...
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2 text-center text-xs bg-slate-900/60 p-2 rounded-xl border border-slate-700/50">
+                    <div>
+                        <div class="text-slate-400">White Sum</div>
+                        <div id="p2-white-sum" class="font-bold text-slate-100 text-sm">0 / 7</div>
+                    </div>
+                    <div>
+                        <div class="text-slate-400">Position</div>
+                        <div id="p2-position" class="font-bold text-amber-400 text-sm">Space 0</div>
+                    </div>
+                    <div>
+                        <div class="text-slate-400">Potion</div>
+                        <div id="p2-potion-status" class="font-bold text-cyan-400 text-sm">Ready</div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900/80 rounded-xl p-2.5 border border-slate-700 space-y-1.5">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-[11px] font-bold text-amber-400 uppercase tracking-wider">Ingredients Placed</h3>
+                        <span id="p2-placed-count" class="text-[10px] text-slate-400">0 chips</span>
+                    </div>
+                    <div id="p2-placed-chips" class="flex flex-wrap gap-1.5 max-h-20 overflow-y-auto pr-1 text-xs">
+                        <span class="text-slate-500 text-[11px] italic">No chips drawn yet this round.</span>
+                    </div>
+                </div>
+
+                <div id="p2-controls" class="space-y-2 opacity-50 pointer-events-none">
+                    <div class="grid grid-cols-2 gap-2">
+                        <button id="p2-draw-btn" onclick="drawChip(1)" class="py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm rounded-xl shadow-lg transition-all active:scale-[0.98]">
+                            DRAW CHIP
+                        </button>
+                        <button id="p2-stop-btn" onclick="stopTurn(1)" class="py-3 bg-amber-600 hover:bg-amber-500 text-white font-extrabold text-sm rounded-xl shadow-lg transition-all active:scale-[0.98]">
+                            STOP DRAWING
+                        </button>
+                    </div>
+                    <button id="p2-potion-btn" onclick="usePotion(1)" class="w-full py-2 bg-slate-700 hover:bg-slate-600 text-cyan-300 font-bold text-xs rounded-lg border border-cyan-500/30 flex items-center justify-center space-x-1 transition-all active:scale-[0.98]">
+                        <span>Drink Potion (Return Last Chip)</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-slate-800 rounded-xl p-3 border border-slate-700 space-y-1">
+            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Game Activity Log</h3>
+            <div id="game-log" class="text-xs text-slate-300 h-20 overflow-y-auto space-y-1 pr-2">
+                <div>System initialized. Pass and play secret mode enabled.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALS -->
+    <!-- Explosion Penalty Choice Modal -->
+    <div id="explosion-choice-modal" class="fixed inset-0 modal-bg z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-800 border-2 border-red-500/50 rounded-2xl max-w-md w-full p-6 text-center space-y-5 shadow-2xl relative overflow-hidden">
+            <div class="absolute inset-0 bg-red-900/10 pointer-events-none"></div>
+            <div class="text-4xl animate-bounce">💥</div>
+            <div>
+                <h3 class="font-black text-2xl text-red-400">POT EXPLODED!</h3>
+                <p class="text-slate-300 text-xs mt-1">Your white sum exceeded the limit. You must choose your penalty reward for this round.</p>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-3 pt-2">
+                <button onclick="resolveExplosion('vp')" class="p-4 bg-slate-900 hover:bg-slate-700 border border-sky-500/50 rounded-xl flex flex-col items-center justify-center space-y-1 transition-all active:scale-95 group">
+                    <span class="text-xs font-bold text-slate-400 group-hover:text-slate-300">Take Victory Points</span>
+                    <span id="explosion-vp-val" class="text-2xl font-black text-sky-400">+0 VP</span>
+                    <span class="text-[10px] text-red-400 font-bold">Forfeit Coins</span>
+                </button>
+                <button onclick="resolveExplosion('coins')" class="p-4 bg-slate-900 hover:bg-slate-700 border border-amber-500/50 rounded-xl flex flex-col items-center justify-center space-y-1 transition-all active:scale-95 group">
+                    <span class="text-xs font-bold text-slate-400 group-hover:text-slate-300">Take Coins (Shop)</span>
+                    <span id="explosion-coins-val" class="text-2xl font-black text-amber-400">+0 Coins</span>
+                    <span class="text-[10px] text-red-400 font-bold">Forfeit VP</span>
+                </button>
+            </div>
+            <p class="text-[10px] text-slate-500 italic">Rubies are still awarded if your token landed on a Ruby space.</p>
+        </div>
+    </div>
+
+    <!-- Dice Roll Modal -->
+    <div id="dice-modal" class="fixed inset-0 modal-bg z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-800 border-2 border-amber-500/50 rounded-2xl max-w-sm w-full p-6 text-center space-y-5 shadow-2xl relative overflow-hidden">
+            <h3 class="font-black text-2xl text-amber-400">Bonus Die Phase</h3>
+            <p id="dice-player-name" class="text-slate-300 text-sm font-bold">Player 1 earned a roll!</p>
+            
+            <div class="flex justify-center py-4">
+                <div id="dice-container" class="w-24 h-24 bg-slate-700 rounded-2xl border-4 border-amber-500 flex items-center justify-center shadow-inner transition-transform duration-75">
+                    <span id="dice-face" class="text-5xl drop-shadow-md">🎲</span>
+                </div>
+            </div>
+
+            <p id="dice-result-text" class="text-amber-300 font-bold h-6 text-lg"></p>
+
+            <button id="dice-roll-btn" onclick="rollBonusDie()" class="w-full py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm rounded-xl transition-all active:scale-95 shadow-lg">
+                ROLL DIE
+            </button>
+            <button id="dice-continue-btn" onclick="continueDicePhase()" class="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-sm rounded-xl transition-all active:scale-95 shadow-lg hidden">
+                CONTINUE TO SHOP
+            </button>
+        </div>
+    </div>
+
+    <!-- Bag Viewer -->
+    <div id="bag-modal" class="fixed inset-0 modal-bg z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+                <h3 id="bag-modal-title" class="font-bold text-lg text-amber-400">Chips Remaining in Bag</h3>
+                <button onclick="closeBagModal()" class="text-slate-400 hover:text-white font-bold text-sm">✕</button>
+            </div>
+            <div id="bag-modal-content" class="space-y-3 text-sm"></div>
+            <button onclick="closeBagModal()" class="w-full py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-100 font-bold text-xs rounded-xl transition-all active:scale-95">Close</button>
+        </div>
+    </div>
+
+    <!-- Crow Modal -->
+    <div id="crow-modal" class="fixed inset-0 modal-bg z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl">
+            <div class="text-center space-y-1">
+                <h3 class="font-extrabold text-lg text-sky-400">Blue Crow Skull Ability</h3>
+                <p class="text-slate-300 text-xs">Choose 1 candidate to place immediately, or discard back to bag.</p>
+            </div>
+            <div id="crow-candidates" class="grid grid-cols-2 gap-3 py-2"></div>
+            <button onclick="discardCrowCandidates()" class="w-full py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-300 font-bold text-xs rounded-xl transition-all active:scale-95">
+                Discard Candidates Back to Bag
+            </button>
+        </div>
+    </div>
+
+    <!-- End Round Shop -->
+    <div id="end-round-modal" class="fixed inset-0 modal-bg z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-xl w-full p-6 space-y-5 shadow-2xl my-auto">
+            <div class="text-center space-y-1 border-b border-slate-700 pb-3">
+                <h3 id="end-round-title" class="font-black text-2xl text-amber-400">End of Round Summary</h3>
+                <p id="end-round-subtitle" class="text-slate-400 text-xs">Market & Ruby Purchase Phase</p>
+            </div>
+            <div id="round-rewards-summary" class="bg-slate-900/80 p-3 rounded-xl border border-slate-700 space-y-2 text-xs"></div>
+
+            <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700 space-y-2">
+                <div class="flex justify-between items-center">
+                    <h4 class="font-bold text-xs text-rose-400 uppercase tracking-wide">Ruby Purchases</h4>
+                    <span id="market-rubies-left" class="text-xs font-bold text-rose-400 bg-rose-500/20 px-2 py-0.5 rounded border border-rose-500/30">Rubies: 2</span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <button id="ruby-droplet-btn" onclick="buyDroplet()" class="p-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed border border-slate-600 rounded-lg text-left text-xs space-y-0.5 transition-all active:scale-95">
+                        <div class="font-bold text-emerald-400">+1 Droplet Space (2 Rubies)</div>
+                        <div class="text-slate-400 text-[10px]">Permanently advances starting point</div>
+                    </button>
+                    <button id="ruby-potion-btn" onclick="buyPotionRefill()" class="p-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed border border-slate-600 rounded-lg text-left text-xs space-y-0.5 transition-all active:scale-95">
+                        <div class="font-bold text-cyan-400" id="potion-cost-label">Refill Potion Flask (2 Rubies)</div>
+                        <div class="text-slate-400 text-[10px]">Recharges empty potion</div>
+                    </button>
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                    <h4 class="font-bold text-xs text-amber-400 uppercase tracking-wide">Market Catalog</h4>
+                    <span id="market-coins-left" class="text-xs font-bold text-emerald-400 bg-emerald-500/20 px-2 py-0.5 rounded border border-emerald-500/30">Coins: 0</span>
+                </div>
+                <div id="market-catalog" class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1"></div>
+            </div>
+            <button id="shop-next-btn" onclick="advanceShop()" class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-slate-950 font-black text-sm rounded-xl shadow-lg mt-4 transition-all active:scale-[0.98]">
+                ADVANCE TO NEXT ROUND
+            </button>
+        </div>
+    </div>
+
+    <!-- Game Over -->
+    <div id="game-over-modal" class="fixed inset-0 modal-bg z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 text-center space-y-5 shadow-2xl">
+            <h2 class="text-3xl font-black text-amber-400">Campaign Completed!</h2>
+            <p class="text-slate-300 text-xs">9 Rounds Finished</p>
+            <div id="game-over-stats" class="bg-slate-900 p-4 rounded-xl border border-slate-700 space-y-3"></div>
+            <button onclick="location.reload()" class="w-full py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm rounded-xl transition-all active:scale-95">
+                PLAY AGAIN
+            </button>
+        </div>
+    </div>
+
+    <!-- Almanac -->
+    <div id="almanac-modal" class="fixed inset-0 modal-bg z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-lg w-full p-5 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+                <h3 id="almanac-title" class="font-bold text-lg text-amber-400">Ingredient Set Almanac</h3>
+                <button onclick="toggleAlmanacModal()" class="text-slate-400 hover:text-white font-bold text-sm">✕</button>
+            </div>
+            <div id="almanac-content" class="space-y-2 text-xs max-h-[60vh] overflow-y-auto pr-1"></div>
+            <button onclick="toggleAlmanacModal()" class="w-full py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold text-xs rounded-xl transition-all active:scale-95">Close Almanac</button>
+        </div>
+    </div>
+
+    <script>
+        const TRACK = [
+            { space: 0, vp: 0, coins: 0, ruby: false }, { space: 1, vp: 0, coins: 1, ruby: false },
+            { space: 2, vp: 0, coins: 2, ruby: false }, { space: 3, vp: 0, coins: 3, ruby: false },
+            { space: 4, vp: 0, coins: 4, ruby: false }, { space: 5, vp: 0, coins: 5, ruby: true },
+            { space: 6, vp: 1, coins: 6, ruby: false }, { space: 7, vp: 1, coins: 7, ruby: false },
+            { space: 8, vp: 1, coins: 8, ruby: false }, { space: 9, vp: 1, coins: 9, ruby: true },
+            { space: 10, vp: 2, coins: 10, ruby: false }, { space: 11, vp: 2, coins: 11, ruby: false },
+            { space: 12, vp: 2, coins: 12, ruby: false }, { space: 13, vp: 2, coins: 13, ruby: false },
+            { space: 14, vp: 3, coins: 14, ruby: true }, { space: 15, vp: 3, coins: 15, ruby: false },
+            { space: 16, vp: 3, coins: 15, ruby: true }, { space: 17, vp: 3, coins: 16, ruby: false },
+            { space: 18, vp: 4, coins: 16, ruby: false }, { space: 19, vp: 4, coins: 17, ruby: false },
+            { space: 20, vp: 4, coins: 17, ruby: true }, { space: 21, vp: 4, coins: 18, ruby: false },
+            { space: 22, vp: 5, coins: 18, ruby: false }, { space: 23, vp: 5, coins: 19, ruby: false },
+            { space: 24, vp: 5, coins: 19, ruby: true }, { space: 25, vp: 5, coins: 20, ruby: false },
+            { space: 26, vp: 6, coins: 20, ruby: false }, { space: 27, vp: 6, coins: 21, ruby: false },
+            { space: 28, vp: 6, coins: 21, ruby: true }, { space: 29, vp: 7, coins: 22, ruby: false },
+            { space: 30, vp: 7, coins: 22, ruby: false }, { space: 31, vp: 7, coins: 23, ruby: false },
+            { space: 32, vp: 8, coins: 23, ruby: true }, { space: 33, vp: 8, coins: 24, ruby: false }
+        ];
+
+        const FORTUNE_TELLER_CARDS = [
+            { id: 'feast', title: "The Alchemist's Feast", desc: "All players draw 1 extra white chip from their bag and place it in their pot before starting." },
+            { id: 'market', title: "Flea Market", desc: "Ingredient chips cost 1 coin less during this round's market phase." },
+            { id: 'flask', title: "Blessed Flask", desc: "Potion refills cost only 1 Ruby this round." },
+            { id: 'rubies', title: "Ruby Rain", desc: "Every player immediately gains 1 bonus Ruby at the start of the round." }
+        ];
+
+        let activeFortuneCard = null;
+
+        const SET_ALMANAC = {
+            1: {
+                orange: "Pumpkin: Solid pot filler with no special ability.",
+                green: "Toadstool: +1 space if 1-2 Pumpkins in pot; +2 extra spaces if 3+ Pumpkins.",
+                blue: "Crow Skull: Draw candidate chips equal to value, choose 1 to place or discard.",
+                red: "Garden Spider: Evaluated End-of-Round. Earn 1 Ruby if a green chip is the very last or next-to-last chip placed.",
+                yellow: "Mandrake: Doubled value if placed immediately after a White chip.",
+                purple: "Ghost's Breath: Evaluated End-of-Round. +1 space if opponent has more Ghost chips in pot."
+            },
+            2: {
+                orange: "Pumpkin: Standard value.",
+                green: "Toadstool: Bonus coins equal to value if adjacent to Orange Pumpkins.",
+                blue: "Crow Skull: If potion explodes next chip, still receive BOTH VP and Coins.",
+                red: "Garden Spider: End-of-round bonus chips if placed near end of pot.",
+                yellow: "Mandrake: The very NEXT drawn chip after this Mandrake is moved twice as far.",
+                purple: "Ghost's Breath: End-of-round VP scaling based on total purple count."
+            },
+            3: {
+                orange: "Pumpkin: Standard value.",
+                green: "Toadstool: Adds white value to red chip if placed directly after white.",
+                blue: "Crow Skull: Reveal top chip of bag; choose to place or return.",
+                red: "Garden Spider: If white sum equals EXACTLY 7, advance last chip by green value.",
+                yellow: "Mandrake: Increases white explosion threshold from 7 to 8 or 9.",
+                purple: "Ghost's Breath: End-of-round VP based on board zone index (10+, 20+, 30+)."
+            },
+            4: {
+                orange: "Pumpkin: Standard value.",
+                green: "Toadstool: When present in pot, all subsequent White 1s move 2 spaces.",
+                blue: "Crow Skull: +1 VP for every blue chip in pot at turn end.",
+                red: "Garden Spider: +1 VP per green chip in pot at round end if not exploded.",
+                yellow: "Mandrake: Bonus movement scales with total yellow count in pot.",
+                purple: "Ghost's Breath: Instant +1 Ruby if placed on an even-numbered space index."
+            }
+        };
+
+        let audioCtx;
+        function initAudio() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        function playSound(type) {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+
+            if (type === 'draw') {
+                osc.type = 'sine'; osc.frequency.setValueAtTime(500, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(900, audioCtx.currentTime + 0.08);
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.08);
+            } else if (type === 'potion') {
+                osc.type = 'triangle'; osc.frequency.setValueAtTime(350, audioCtx.currentTime);
+                osc.frequency.linearRampToValueAtTime(750, audioCtx.currentTime + 0.15);
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.15);
+            } else if (type === 'explode') {
+                osc.type = 'sawtooth'; osc.frequency.setValueAtTime(120, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(20, audioCtx.currentTime + 0.4);
+                gain.gain.setValueAtTime(0.35, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+            } else if (type === 'coin') {
+                osc.type = 'sine'; osc.frequency.setValueAtTime(900, audioCtx.currentTime);
+                osc.frequency.setValueAtTime(1300, audioCtx.currentTime + 0.05);
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.12);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.12);
+            }
+        }
+
+        let particles = [];
+        function createParticles(x, y, colorStr, isExplosion = false) {
+            const count = isExplosion ? 50 : 12;
+            for(let i=0; i<count; i++) {
+                particles.push({
+                    x: x, y: y,
+                    vx: (Math.random() - 0.5) * (isExplosion ? 9 : 3.5),
+                    vy: (Math.random() - 0.5) * (isExplosion ? 9 : 3.5),
+                    life: 1.0, color: isExplosion ? '#ef4444' : colorStr
+                });
+            }
+        }
+
+        let gameMode = '1p';
+        let currentSet = 1;
+        let currentRound = 1;
+        let activePlayerIndex = 0;
+        let currentShopperIndex = 0;
+        let currentTurnCoins = 0;
+        let currentTurnPurchases = [];
+        
+        let pendingExplosionPlayer = null;
+        let players = [createNewPlayerState("Player 1"), createNewPlayerState("Player 2")];
+        let pendingCrowCandidates = [];
+        
+        let eligibleDiceRollers = [];
+        let currentDiceRollerIndex = 0;
+
+        const DICE_FACES = [
+            { id: 'vp1a', text: '+1 VP', icon: '🌟', vp: 1, ruby: 0, droplet: 0, pumpkin: 0 },
+            { id: 'vp1b', text: '+1 VP', icon: '🌟', vp: 1, ruby: 0, droplet: 0, pumpkin: 0 },
+            { id: 'vp2', text: '+2 VP', icon: '🌟🌟', vp: 2, ruby: 0, droplet: 0, pumpkin: 0 },
+            { id: 'ruby', text: '+1 Ruby', icon: '💎', vp: 0, ruby: 1, droplet: 0, pumpkin: 0 },
+            { id: 'droplet', text: '+1 Droplet Space', icon: '💧', vp: 0, ruby: 0, droplet: 1, pumpkin: 0 },
+            { id: 'pumpkin', text: '+1 Pumpkin (to bag)', icon: '🎃', vp: 0, ruby: 0, droplet: 0, pumpkin: 1 }
+        ];
+
+        function createNewPlayerState(name) {
+            return {
+                name: name, droplet: 0, potionFull: true, vp: 0, rubies: 2, whiteSum: 0,
+                currentSpace: 0, exploded: false, explosionChoice: null, finished: false, drawnChips: [],
+                bag: [
+                    { color: 'white', val: 1, name: 'White 1' }, { color: 'white', val: 1, name: 'White 1' },
+                    { color: 'white', val: 1, name: 'White 1' }, { color: 'white', val: 2, name: 'White 2' },
+                    { color: 'white', val: 3, name: 'White 3' }, { color: 'orange', val: 1, name: 'Orange Pumpkin 1' },
+                    { color: 'red', val: 1, name: 'Red Toadstool 1' }
+                ]
+            };
+        }
+
+        function setMode(mode) {
+            gameMode = mode;
+            document.getElementById('mode-1p').className = mode === '1p' ? 'py-3 px-4 rounded-xl border-2 font-bold text-sm transition-all border-amber-500 bg-amber-500/10 text-amber-400' : 'py-3 px-4 rounded-xl border-2 font-bold text-sm transition-all border-slate-600 bg-slate-700/50 text-slate-300 hover:border-slate-500';
+            document.getElementById('mode-2p').className = mode === '2p' ? 'py-3 px-4 rounded-xl border-2 font-bold text-sm transition-all border-amber-500 bg-amber-500/10 text-amber-400' : 'py-3 px-4 rounded-xl border-2 font-bold text-sm transition-all border-slate-600 bg-slate-700/50 text-slate-300 hover:border-slate-500';
+            document.getElementById('p2-name-group').classList.toggle('hidden', mode === '1p');
+        }
+
+        function selectSet(setNum) {
+            currentSet = setNum;
+            for(let i=1; i<=4; i++) {
+                document.getElementById(`set-${i}-btn`).className = i === setNum ? 'py-2 rounded-lg font-bold text-xs border border-amber-500 bg-amber-500/20 text-amber-300' : 'py-2 rounded-lg font-bold text-xs border border-slate-700 bg-slate-900 text-slate-400 hover:border-slate-600';
+            }
+        }
+
+        function startGame() {
+            initAudio();
+            players[0].name = document.getElementById('p1-name-input').value || "Player 1";
+            players[1].name = document.getElementById('p2-name-input').value || "Player 2";
+            document.getElementById('p1-title').innerText = players[0].name;
+            document.getElementById('p2-title').innerText = players[1].name;
+            document.getElementById('p2-card').classList.toggle('hidden', gameMode === '1p');
+            document.getElementById('setup-screen').classList.add('hidden');
+            document.getElementById('game-interface').classList.remove('hidden');
+            document.getElementById('game-interface').classList.add('flex');
+            document.getElementById('active-set-badge').innerText = `Set ${currentSet}`;
+
+            initRoundState();
+            renderAll();
+            logEvent(`Game started! Round 1 begins.`);
+            requestAnimationFrame(animate);
+            
+            setupBoardInspector(0);
+            if (gameMode === '2p') setupBoardInspector(1);
+        }
+
+        function initRoundState() {
+            activeFortuneCard = null;
+            document.getElementById('fortune-banner').classList.add('hidden');
+
+            if (currentRound >= 2) {
+                activeFortuneCard = FORTUNE_TELLER_CARDS[Math.floor(Math.random() * FORTUNE_TELLER_CARDS.length)];
+                document.getElementById('fortune-title').innerText = activeFortuneCard.title;
+                document.getElementById('fortune-desc').innerText = activeFortuneCard.desc;
+                document.getElementById('fortune-banner').classList.remove('hidden');
+                logEvent(`🔮 Fortune Teller Card Drawn: ${activeFortuneCard.title}`);
+
+                if (activeFortuneCard.id === 'rubies') {
+                    players.forEach(p => p.rubies += 1);
+                }
+            }
+
+            players.forEach(p => {
+                p.drawnChips = []; p.whiteSum = 0;
+                p.currentSpace = p.droplet;
+                p.exploded = false; p.finished = false; p.explosionChoice = null;
+
+                if (activeFortuneCard && activeFortuneCard.id === 'feast') {
+                    const whiteChip = { color: 'white', val: 1, name: 'White 1' };
+                    p.currentSpace = Math.min(33, p.currentSpace + 1);
+                    p.drawnChips.push(whiteChip);
+                    p.whiteSum += 1;
+                }
+            });
+
+            activePlayerIndex = 0;
+            currentTurnPurchases = [];
+            
+            // If Pass & Play mode, prompt privacy screen for Player 1
+            if (gameMode === '2p') {
+                showPrivacyInterceptor(0);
+            } else {
+                updateControlsState();
+            }
+        }
+
+        function showPrivacyInterceptor(pIdx) {
+            const p = players[pIdx];
+            document.getElementById('privacy-title').innerText = `Pass to ${p.name}`;
+            document.getElementById('privacy-desc').innerText = `Hand the device to ${p.name}. Keep your pot contents secret until you finish or stop your turn!`;
+            document.getElementById('pass-privacy-modal').classList.remove('hidden');
+        }
+
+        function unlockSecretTurn() {
+            document.getElementById('pass-privacy-modal').classList.add('hidden');
+            updateControlsState();
+        }
+
+        function drawChip(pIdx) {
+            initAudio();
+            const p = players[pIdx];
+            if (p.finished || p.exploded) return;
+            const available = getUndrawnBag(p);
+            if (available.length === 0) {
+                logEvent(`${p.name}'s bag is empty! Forced to stop.`);
+                stopTurn(pIdx); return;
+            }
+            const randIdx = Math.floor(Math.random() * available.length);
+            executeChipPlacement(pIdx, available[randIdx]);
+        }
+
+        function executeChipPlacement(pIdx, chip) {
+            const p = players[pIdx];
+            let moveDist = chip.val;
+
+            if (chip.color === 'red' && currentSet === 1) {
+                const pumpkinCount = p.drawnChips.filter(c => c.color === 'orange').length;
+                if (pumpkinCount >= 3) moveDist += 2;
+                else if (pumpkinCount >= 1) moveDist += 1;
+            } else if (chip.color === 'yellow' && currentSet === 1) {
+                if (p.drawnChips.length > 0 && p.drawnChips[p.drawnChips.length - 1].color === 'white') {
+                    moveDist *= 2;
+                }
+            }
+
+            if (currentSet === 2 && p.drawnChips.length > 0) {
+                const lastChip = p.drawnChips[p.drawnChips.length - 1];
+                if (lastChip.color === 'yellow') {
+                    moveDist *= 2;
+                    logEvent(`${p.name}'s Set 2 Yellow Mandrake doubled ${chip.name}'s movement to ${moveDist}!`);
+                }
+            }
+
+            p.currentSpace = Math.min(33, p.currentSpace + moveDist);
+            p.drawnChips.push(chip);
+            if (chip.color === 'white') p.whiteSum += chip.val;
+
+            playSound('draw');
+            const pt = getTrackCoords()[p.currentSpace] || getTrackCoords()[33];
+            createParticles(pt.x, pt.y, getChipHex(chip.color));
+            logEvent(`${p.name} drew ${chip.name} -> Moved to Space ${p.currentSpace}`);
+
+            if (chip.color === 'blue' && currentSet === 1) {
+                triggerCrowSkullAbility(pIdx, chip.val);
+                return;
+            }
+
+            const yellowCount = p.drawnChips.filter(c => c.color === 'yellow').length;
+            let maxWhite = 7;
+            if (currentSet === 3) {
+                if (yellowCount >= 3) maxWhite = 9;
+                else if (yellowCount >= 1) maxWhite = 8;
+            }
+
+            if (p.whiteSum > maxWhite) {
+                p.exploded = true; p.finished = true;
+                playSound('explode');
+                createParticles(200, 200, '#ef4444', true);
+                logEvent(`💥 BOOM! ${p.name}'s pot exploded (${p.whiteSum} white)!`);
+                handleTurnEnd(pIdx);
+            }
+            renderAll();
+        }
+
+        function triggerCrowSkullAbility(pIdx, crowVal) {
+            const p = players[pIdx];
+            const pool = getUndrawnBag(p);
+            if (pool.length === 0) { renderAll(); return; }
+            pendingCrowCandidates = [];
+            const count = Math.min(crowVal, pool.length); 
+            for (let i = 0; i < count; i++) {
+                const rand = Math.floor(Math.random() * pool.length);
+                pendingCrowCandidates.push(pool.splice(rand, 1)[0]);
+            }
+            const container = document.getElementById('crow-candidates');
+            container.innerHTML = pendingCrowCandidates.map((c, idx) => `
+                <button onclick="selectCrowCandidate(${idx})" class="p-3 bg-slate-900 hover:bg-slate-700 border border-slate-600 rounded-xl flex flex-col items-center space-y-1">
+                    <span class="font-bold text-xs text-amber-400">${c.name}</span>
+                    <span class="text-[10px] text-slate-400">Value ${c.val}</span>
+                </button>
+            `).join('');
+            document.getElementById('crow-modal').classList.remove('hidden');
+        }
+
+        function selectCrowCandidate(cIdx) {
+            document.getElementById('crow-modal').classList.add('hidden');
+            executeChipPlacement(activePlayerIndex, pendingCrowCandidates[cIdx]);
+        }
+
+        function discardCrowCandidates() {
+            document.getElementById('crow-modal').classList.add('hidden');
+            logEvent(`${players[activePlayerIndex].name} discarded Crow candidates.`);
+            renderAll();
+        }
+
+        function usePotion(pIdx) {
+            const p = players[pIdx];
+            if (!p.potionFull || p.exploded || p.drawnChips.length === 0) return;
+            const lastChip = p.drawnChips.pop();
+            if (lastChip.color === 'white') p.whiteSum -= lastChip.val;
+            p.currentSpace = Math.max(p.droplet, p.currentSpace - lastChip.val);
+            p.potionFull = false;
+            playSound('potion');
+            logEvent(`${p.name} drank Potion! Returned ${lastChip.name}.`);
+            renderAll();
+        }
+
+        function stopTurn(pIdx) {
+            const p = players[pIdx];
+            p.finished = true;
+            logEvent(`${p.name} stopped at Space ${p.currentSpace}.`);
+            handleTurnEnd(pIdx);
+        }
+
+        function handleTurnEnd(pIdx) {
+            if (gameMode === '2p' && activePlayerIndex === 0 && !players[1].finished) {
+                activePlayerIndex = 1;
+                logEvent(`Turn passed to ${players[1].name}.`);
+                showPrivacyInterceptor(1);
+            } else if (players.every(p => p.finished || gameMode === '1p')) {
+                updateControlsState(); 
+                renderAll();
+                promptExplosionChoices();
+            }
+        }
+
+        function promptExplosionChoices() {
+            const bustedPlayerIdx = players.findIndex(p => p.exploded && !p.explosionChoice);
+            if (bustedPlayerIdx !== -1) {
+                pendingExplosionPlayer = bustedPlayerIdx;
+                const p = players[bustedPlayerIdx];
+                const spaceData = TRACK[p.currentSpace] || TRACK[33];
+                
+                document.getElementById('explosion-vp-val').innerText = `+${spaceData.vp} VP`;
+                document.getElementById('explosion-coins-val').innerText = `+${spaceData.coins} Coins`;
+                document.getElementById('explosion-choice-modal').classList.remove('hidden');
+            } else {
+                startDicePhase();
+            }
+        }
+
+        function resolveExplosion(choiceStr) {
+            document.getElementById('explosion-choice-modal').classList.add('hidden');
+            if (pendingExplosionPlayer !== null) {
+                const p = players[pendingExplosionPlayer];
+                p.explosionChoice = choiceStr;
+                logEvent(`${p.name} chose to take ${choiceStr.toUpperCase()} as their penalty.`);
+                pendingExplosionPlayer = null;
+                promptExplosionChoices();
+            }
+        }
+
+        function startDicePhase() {
+            eligibleDiceRollers = [];
+            if (gameMode === '1p') {
+                if (!players[0].exploded) eligibleDiceRollers.push(0);
+            } else {
+                let maxSpace = -1;
+                players.forEach(p => {
+                    if (!p.exploded && p.currentSpace > maxSpace) maxSpace = p.currentSpace;
+                });
+                if (maxSpace > -1) {
+                    players.forEach((p, idx) => {
+                        if (!p.exploded && p.currentSpace === maxSpace) eligibleDiceRollers.push(idx);
+                    });
+                }
+            }
+            currentDiceRollerIndex = 0;
+            processNextDiceRoller();
+        }
+
+        function processNextDiceRoller() {
+            if (currentDiceRollerIndex < eligibleDiceRollers.length) {
+                const pIdx = eligibleDiceRollers[currentDiceRollerIndex];
+                document.getElementById('dice-player-name').innerText = `${players[pIdx].name} earned a bonus roll!`;
+                document.getElementById('dice-face').innerText = '🎲';
+                document.getElementById('dice-result-text').innerText = 'Ready to roll...';
+                document.getElementById('dice-roll-btn').classList.remove('hidden');
+                document.getElementById('dice-continue-btn').classList.add('hidden');
+                document.getElementById('dice-modal').classList.remove('hidden');
+            } else {
+                document.getElementById('dice-modal').classList.add('hidden');
+                openEndRoundModal();
+            }
+        }
+
+        function rollBonusDie() {
+            document.getElementById('dice-roll-btn').classList.add('hidden');
+            const container = document.getElementById('dice-container');
+            const face = document.getElementById('dice-face');
+            const pIdx = eligibleDiceRollers[currentDiceRollerIndex];
+            const p = players[pIdx];
+            playSound('draw');
+            
+            let rolls = 0;
+            let interval = setInterval(() => {
+                const randomFace = DICE_FACES[Math.floor(Math.random() * DICE_FACES.length)];
+                face.innerText = randomFace.icon;
+                container.style.transform = `rotate(${Math.random() * 20 - 10}deg) scale(${0.9 + Math.random()*0.2})`;
+                rolls++;
+                
+                if (rolls > 15) {
+                    clearInterval(interval);
+                    container.style.transform = 'rotate(0deg) scale(1)';
+                    const finalFace = DICE_FACES[Math.floor(Math.random() * DICE_FACES.length)];
+                    face.innerText = finalFace.icon;
+                    document.getElementById('dice-result-text').innerText = finalFace.text;
+                    
+                    if (finalFace.vp) p.vp += finalFace.vp;
+                    if (finalFace.ruby) p.rubies += finalFace.ruby;
+                    if (finalFace.droplet) p.droplet += finalFace.droplet;
+                    if (finalFace.pumpkin) {
+                        p.bag.push({ color: 'orange', val: 1, name: 'Orange Pumpkin 1' });
+                    }
+                    
+                    logEvent(`🎲 ${p.name} rolled the Bonus Die and won: ${finalFace.text}!`);
+                    playSound('coin');
+                    renderAll();
+                    document.getElementById('dice-continue-btn').classList.remove('hidden');
+                }
+            }, 60);
+        }
+
+        function continueDicePhase() {
+            currentDiceRollerIndex++;
+            processNextDiceRoller();
+        }
+
+        function updateControlsState() {
+            const p1Active = activePlayerIndex === 0 && !players[0].finished;
+            const p2Active = activePlayerIndex === 1 && !players[1].finished && gameMode === '2p';
+            document.getElementById('p1-controls').className = p1Active ? "space-y-2" : "space-y-2 opacity-50 pointer-events-none";
+            document.getElementById('p2-controls').className = p2Active ? "space-y-2" : "space-y-2 opacity-50 pointer-events-none";
+        }
+
+        function getUndrawnBag(p) {
+            let tempBag = [...p.bag];
+            p.drawnChips.forEach(drawn => {
+                const idx = tempBag.findIndex(c => c.color === drawn.color && c.val === drawn.val);
+                if (idx !== -1) tempBag.splice(idx, 1);
+            });
+            return tempBag;
+        }
+
+        function getTrackCoords() {
+            const center = 200; let coords = [];
+            for (let i = 0; i <= 33; i++) {
+                const angle = 0.35 * i; const radius = 25 + (i * 4.5);
+                coords.push({ x: center + radius * Math.cos(angle), y: center + radius * Math.sin(angle) });
+            }
+            return coords;
+        }
+
+        function setupBoardInspector(pIdx) {
+            const canvasId = pIdx === 0 ? 'p1-canvas' : 'p2-canvas';
+            const tooltipId = pIdx === 0 ? 'p1-tooltip' : 'p2-tooltip';
+            const canvas = document.getElementById(canvasId);
+            const tooltip = document.getElementById(tooltipId);
+            const coords = getTrackCoords();
+
+            canvas.addEventListener('mousemove', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = canvas.width / rect.width;
+                const scaleY = canvas.height / rect.height;
+                const mouseX = (e.clientX - rect.left) * scaleX;
+                const mouseY = (e.clientY - rect.top) * scaleY;
+
+                let hoveredSpace = -1;
+                coords.forEach((pt, i) => {
+                    const dist = Math.hypot(pt.x - mouseX, pt.y - mouseY);
+                    if (dist < 16) hoveredSpace = i;
+                });
+
+                if (hoveredSpace !== -1 && TRACK[hoveredSpace]) {
+                    const data = TRACK[hoveredSpace];
+                    tooltip.innerHTML = `<strong>Space ${hoveredSpace}</strong>: ${data.coins} Coins, ${data.vp} VP ${data.ruby ? '| 💎 Ruby' : ''}`;
+                    tooltip.classList.remove('hidden');
+                } else {
+                    tooltip.classList.add('hidden');
+                }
+            });
+
+            canvas.addEventListener('mouseleave', () => {
+                tooltip.classList.add('hidden');
+            });
+        }
+
+        function animate() {
+            renderAll();
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.x += p.vx; p.y += p.vy; p.life -= 0.03;
+                if (p.life <= 0) particles.splice(i, 1);
+            }
+            requestAnimationFrame(animate);
+        }
+
+        function renderAll() {
+            renderPlayerBoard(0);
+            if (gameMode === '2p') renderPlayerBoard(1);
+        }
+
+        function renderPlayerBoard(pIdx) {
+            const p = players[pIdx];
+            const canvas = document.getElementById(pIdx === 0 ? 'p1-canvas' : 'p2-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 400; canvas.height = 400;
+            ctx.clearRect(0, 0, 400, 400);
+
+            const coords = getTrackCoords();
+            ctx.beginPath(); ctx.strokeStyle = '#334155'; ctx.lineWidth = 18;
+            coords.forEach((pt, i) => i===0 ? ctx.moveTo(pt.x,pt.y) : ctx.lineTo(pt.x,pt.y));
+            ctx.stroke();
+
+            coords.forEach((pt, i) => {
+                ctx.beginPath(); ctx.arc(pt.x, pt.y, 8, 0, Math.PI * 2);
+                ctx.fillStyle = i <= p.currentSpace ? '#1e293b' : '#0f172a';
+                ctx.fill(); ctx.strokeStyle = '#475569'; ctx.lineWidth = 1; ctx.stroke();
+                if (TRACK[i].ruby) {
+                    ctx.beginPath(); ctx.arc(pt.x, pt.y, 4, 0, Math.PI*2);
+                    ctx.fillStyle = '#ef4444'; ctx.fill();
+                }
+            });
+
+            if (coords[p.droplet]) {
+                ctx.beginPath(); ctx.arc(coords[p.droplet].x, coords[p.droplet].y, 10, 0, Math.PI*2);
+                ctx.fillStyle = '#10b981'; ctx.fill();
+            }
+
+            let currPos = p.droplet;
+            p.drawnChips.forEach(chip => {
+                currPos = Math.min(33, currPos + chip.val);
+                if (coords[currPos]) {
+                    ctx.beginPath(); ctx.arc(coords[currPos].x, coords[currPos].y, 11, 0, Math.PI*2);
+                    ctx.fillStyle = getChipHex(chip.color); ctx.fill();
+                    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5; ctx.stroke();
+                    ctx.fillStyle = '#ffffff'; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                    ctx.fillText(chip.val, coords[currPos].x, coords[currPos].y);
+                }
+            });
+
+            particles.forEach(pt => {
+                ctx.beginPath(); ctx.arc(pt.x, pt.y, 3, 0, Math.PI*2);
+                ctx.fillStyle = pt.color; ctx.globalAlpha = pt.life; ctx.fill(); ctx.globalAlpha = 1.0;
+            });
+
+            const prefix = pIdx === 0 ? 'p1' : 'p2';
+            document.getElementById(`${prefix}-white-sum`).innerText = `${p.whiteSum} / 7`;
+            document.getElementById(`${prefix}-position`).innerText = `Space ${p.currentSpace}`;
+            document.getElementById(`${prefix}-potion-status`).innerText = p.potionFull ? 'Ready' : 'Empty';
+            document.getElementById(`${prefix}-coins-val`).innerText = (TRACK[p.currentSpace] || TRACK[33]).coins;
+            document.getElementById(`${prefix}-vp-val`).innerText = p.vp + (TRACK[p.currentSpace] || TRACK[33]).vp;
+            document.getElementById(`${prefix}-rubies-val`).innerText = p.rubies;
+
+            const placedContainer = document.getElementById(`${prefix}-placed-chips`);
+            document.getElementById(`${prefix}-placed-count`).innerText = `${p.drawnChips.length} chips`;
+            placedContainer.innerHTML = p.drawnChips.length === 0 
+                ? `<span class="text-slate-500 text-[11px] italic">No chips drawn yet this round.</span>`
+                : p.drawnChips.map(c => `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border border-slate-600 shadow-sm" style="background-color:${getChipHex(c.color)}; color: ${c.color === 'white' ? '#0f172a' : '#ffffff'}">${c.name}</span>`).join('');
+        }
+
+        function getChipHex(color) {
+            const hexes = { white: '#e2e8f0', orange: '#f97316', green: '#22c55e', red: '#ef4444', blue: '#06b6d4', yellow: '#eab308', purple: '#a855f7', black: '#334155' };
+            return hexes[color] || '#94a3b8';
+        }
+
+        function openEndRoundModal() {
+            players.forEach(p => {
+                const spaceData = TRACK[p.currentSpace] || TRACK[33];
+                if (p.exploded) {
+                    if (p.explosionChoice === 'vp') p.vp += spaceData.vp;
+                } else {
+                    p.vp += spaceData.vp;
+                }
+                if (spaceData.ruby) p.rubies += 1;
+            });
+
+            currentShopperIndex = 0;
+            currentTurnPurchases = [];
+            const p = players[currentShopperIndex];
+            const spaceData = TRACK[p.currentSpace] || TRACK[33];
+            currentTurnCoins = (p.exploded && p.explosionChoice === 'vp') ? 0 : spaceData.coins;
+
+            renderShopModalUI();
+            document.getElementById('end-round-modal').classList.remove('hidden');
+        }
+
+        function renderShopModalUI() {
+            const p = players[currentShopperIndex];
+            document.getElementById('round-rewards-summary').innerHTML = players.map((pl, idx) => {
+                if (gameMode === '1p' && idx === 1) return '';
+                const pSpaceData = TRACK[pl.currentSpace] || TRACK[33];
+                let summaryText = `Earned ${pSpaceData.coins} Coins & +${pSpaceData.vp} VP`;
+                if (pl.exploded) {
+                    summaryText = pl.explosionChoice === 'vp' ? `💥 Took +${pSpaceData.vp} VP (Forfeited Coins)` : `💥 Took ${pSpaceData.coins} Coins (Forfeited VP)`;
+                }
+                return `
+                    <div class="p-2.5 bg-slate-800 rounded-lg border ${idx === currentShopperIndex ? 'border-amber-500 shadow-md' : 'border-slate-700'} space-y-1">
+                        <div class="font-bold ${idx === currentShopperIndex ? 'text-amber-400' : 'text-slate-400'}">${pl.name}</div>
+                        <div class="text-[11px] text-slate-300">${summaryText} (Total VP: ${pl.vp})</div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('end-round-subtitle').innerText = `${p.name}'s Market & Ruby Phase`;
+            document.getElementById('market-coins-left').innerText = `Coins: ${currentTurnCoins}`;
+            document.getElementById('market-rubies-left').innerText = `Rubies: ${p.rubies}`;
+
+            const flaskCost = (activeFortuneCard && activeFortuneCard.id === 'flask') ? 1 : 2;
+            document.getElementById('potion-cost-label').innerText = `Refill Potion Flask (${flaskCost} Rubies)`;
+
+            document.getElementById('ruby-droplet-btn').disabled = p.rubies < 2;
+            document.getElementById('ruby-potion-btn').disabled = (p.rubies < flaskCost || p.potionFull);
+
+            const nextBtn = document.getElementById('shop-next-btn');
+            nextBtn.innerText = (gameMode === '2p' && currentShopperIndex === 0) ? `FINISH ${p.name.toUpperCase()}'S SHOP & PASS TO PLAYER 2` : "ADVANCE TO NEXT ROUND";
+
+            renderMarketCatalog();
+        }
+
+        function advanceShop() {
+            if (gameMode === '2p' && currentShopperIndex === 0) {
+                currentShopperIndex = 1;
+                currentTurnPurchases = [];
+                const p = players[currentShopperIndex];
+                const spaceData = TRACK[p.currentSpace] || TRACK[33];
+                currentTurnCoins = (p.exploded && p.explosionChoice === 'vp') ? 0 : spaceData.coins;
+                renderShopModalUI();
+            } else {
+                startNextRound();
+            }
+        }
+
+        function renderMarketCatalog() {
+            let discount = (activeFortuneCard && activeFortuneCard.id === 'market') ? 1 : 0;
+            let catalog = [
+                { color: 'orange', val: 1, name: 'Orange Pumpkin 1', cost: Math.max(1, 3 - discount) },
+                { color: 'orange', val: 2, name: 'Orange Pumpkin 2', cost: Math.max(1, 6 - discount) },
+                { color: 'orange', val: 4, name: 'Orange Pumpkin 4', cost: Math.max(1, 12 - discount) },
+                { color: 'green', val: 1, name: 'Green Toadstool 1', cost: Math.max(1, 4 - discount) },
+                { color: 'green', val: 2, name: 'Green Toadstool 2', cost: Math.max(1, 8 - discount) },
+                { color: 'green', val: 4, name: 'Green Toadstool 4', cost: Math.max(1, 14 - discount) },
+                { color: 'blue', val: 1, name: 'Crow Skull 1', cost: Math.max(1, 5 - discount) },
+                { color: 'blue', val: 2, name: 'Crow Skull 2', cost: Math.max(1, 10 - discount) },
+                { color: 'blue', val: 4, name: 'Crow Skull 4', cost: Math.max(1, 19 - discount) },
+                { color: 'red', val: 1, name: 'Red Spider 1', cost: Math.max(1, 6 - discount) },
+                { color: 'red', val: 2, name: 'Red Spider 2', cost: Math.max(1, 10 - discount) },
+                { color: 'red', val: 4, name: 'Red Spider 4', cost: Math.max(1, 16 - discount) },
+                { color: 'yellow', val: 1, name: 'Mandrake 1', cost: Math.max(1, 8 - discount) },
+                { color: 'yellow', val: 2, name: 'Mandrake 2', cost: Math.max(1, 12 - discount) },
+                { color: 'yellow', val: 4, name: 'Mandrake 4', cost: Math.max(1, 19 - discount) }
+            ];
+
+            document.getElementById('market-catalog').innerHTML = catalog.map(item => {
+                const canAfford = currentTurnCoins >= item.cost;
+                const alreadyBoughtColor = currentTurnPurchases.includes(item.color);
+                const maxPurchasesReached = currentTurnPurchases.length >= 2;
+                const isDisabled = !canAfford || alreadyBoughtColor || maxPurchasesReached;
+                
+                let errorMsg = '';
+                if (alreadyBoughtColor) errorMsg = '(Color already bought)';
+                else if (maxPurchasesReached) errorMsg = '(Max 2 chips)';
+
+                return `
+                <div class="p-2 bg-slate-900 border border-slate-700 rounded-lg flex justify-between items-center ${isDisabled ? 'opacity-50' : ''}">
+                    <div>
+                        <div class="font-bold text-xs text-slate-200">${item.name} <span class="text-[9px] text-red-400 font-bold">${errorMsg}</span></div>
+                        <div class="text-[10px] text-amber-400">Cost: ${item.cost} Coins</div>
+                    </div>
+                    <button onclick="buyChip('${item.color}', ${item.val}, ${item.cost})" ${isDisabled ? 'disabled' : ''} class="px-2.5 py-1 bg-amber-500 hover:bg-amber-400 disabled:bg-slate-700 disabled:text-slate-500 text-slate-950 font-bold text-xs rounded transition-all active:scale-95">
+                        Buy
+                    </button>
+                </div>
+                `;
+            }).join('');
+        }
+
+        function buyChip(color, val, cost) {
+            if (currentTurnCoins >= cost && currentTurnPurchases.length < 2 && !currentTurnPurchases.includes(color)) {
+                playSound('coin');
+                const p = players[currentShopperIndex];
+                p.bag.push({ color, val, name: `${color.toUpperCase()} ${val}` });
+                currentTurnCoins -= cost;
+                currentTurnPurchases.push(color);
+                logEvent(`${p.name} bought ${color.toUpperCase()} ${val} for ${cost} coins!`);
+                renderShopModalUI();
+            }
+        }
+
+        function buyDroplet() {
+            const p = players[currentShopperIndex];
+            if (p.rubies >= 2) {
+                p.rubies -= 2; p.droplet += 1;
+                playSound('coin');
+                logEvent(`${p.name} spent 2 Rubies -> Droplet moved to Space ${p.droplet}.`);
+                renderShopModalUI(); renderAll();
+            }
+        }
+
+        function buyPotionRefill() {
+            const p = players[currentShopperIndex];
+            const flaskCost = (activeFortuneCard && activeFortuneCard.id === 'flask') ? 1 : 2;
+            if (p.rubies >= flaskCost && !p.potionFull) {
+                p.rubies -= flaskCost; p.potionFull = true;
+                playSound('potion');
+                logEvent(`${p.name} spent ${flaskCost} Rubies -> Potion Refilled!`);
+                renderShopModalUI(); renderAll();
+            }
+        }
+
+        function startNextRound() {
+            if (currentRound >= 9) {
+                document.getElementById('end-round-modal').classList.add('hidden');
+                triggerGameOver(); return;
+            }
+            currentRound++;
+            document.getElementById('round-indicator').innerText = `Round ${currentRound} / 9`;
+            document.getElementById('end-round-modal').classList.add('hidden');
+            initRoundState(); renderAll();
+        }
+
+        function triggerGameOver() {
+            const stats = document.getElementById('game-over-stats');
+            const p1 = players[0], p2 = players[1];
+            if (gameMode === '1p') {
+                let rank = p1.vp >= 75 ? "👑 Guildmaster Quack" : p1.vp >= 55 ? "🌟 Master Alchemist" : p1.vp >= 35 ? "🧪 Journeyman Brewer" : "Apprentice Quack";
+                stats.innerHTML = `<div class="text-xs text-amber-400 uppercase tracking-widest font-bold">Final Rank</div>
+                    <div class="text-2xl font-black text-white">${rank}</div>
+                    <div class="grid grid-cols-3 gap-2 pt-2 border-t border-slate-800 text-xs">
+                        <div><div class="text-slate-400">Total VP</div><div class="text-amber-400 font-bold text-base">${p1.vp}</div></div>
+                        <div><div class="text-slate-400">Rubies</div><div class="text-rose-400 font-bold text-base">${p1.rubies}</div></div>
+                        <div><div class="text-slate-400">Droplet</div><div class="text-emerald-400 font-bold text-base">Space ${p1.droplet}</div></div>
+                    </div>`;
+            } else {
+                const winner = p1.vp >= p2.vp ? p1 : p2;
+                stats.innerHTML = `<div class="text-xs text-amber-400 uppercase tracking-widest font-bold">Winner</div>
+                    <div class="text-2xl font-black text-white">🏆 ${winner.name}</div>
+                    <div class="mt-2 text-sm text-slate-300">${p1.name}: ${p1.vp} VP | ${p2.name}: ${p2.vp} VP</div>`;
+            }
+            document.getElementById('game-over-modal').classList.remove('hidden');
+        }
+
+        function openBagModal(pIdx) {
+            const p = players[pIdx];
+            const remaining = getUndrawnBag(p);
+            document.getElementById('bag-modal-title').innerText = `${p.name}'s Bag (${remaining.length} remaining)`;
+            document.getElementById('bag-modal-content').innerHTML = `
+                <div class="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto pr-1">
+                    ${remaining.map(c => `<div class="p-2 bg-slate-900 rounded-lg border border-slate-700 flex items-center space-x-2">
+                            <div class="w-3 h-3 rounded-full" style="background-color:${getChipHex(c.color)}"></div>
+                            <span class="font-bold text-xs text-slate-200">${c.name}</span>
+                        </div>`).join('')}
+                </div>`;
+            document.getElementById('bag-modal').classList.remove('hidden');
+        }
+
+        function closeBagModal() { document.getElementById('bag-modal').classList.add('hidden'); }
+        
+        function toggleAlmanacModal() {
+            document.getElementById('almanac-title').innerText = `Ingredient Set Almanac (Set ${currentSet})`;
+            document.getElementById('almanac-content').innerHTML = Object.entries(SET_ALMANAC[currentSet]).map(([color, desc]) => 
+                `<div class="p-2 bg-slate-900 rounded-lg border border-slate-700"><span class="font-bold text-amber-400 capitalize">${color}:</span> <span class="text-slate-300">${desc}</span></div>`).join('');
+            document.getElementById('almanac-modal').classList.toggle('hidden');
+        }
+
+        function logEvent(msg) {
+            const log = document.getElementById('game-log');
+            const entry = document.createElement('div'); entry.innerText = `> ${msg}`; log.prepend(entry);
+        }
+    </script>
+</body>
+</html>
+```eof
