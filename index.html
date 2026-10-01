@@ -25,7 +25,7 @@
 
     <!-- Version Badge -->
     <div class="fixed bottom-2 right-3 text-[10px] font-mono text-slate-500 pointer-events-none select-none z-30">
-        v1.0.4
+        v1.0.5
     </div>
 
     <!-- SETUP / LOBBY SCREEN -->
@@ -672,7 +672,7 @@
                 if (activeFortuneCard && activeFortuneCard.id === 'feast') {
                     const whiteChip = { color: 'white', val: 1, name: 'White 1' };
                     p.currentSpace = Math.min(33, p.currentSpace + 1);
-                    p.drawnChips.push(whiteChip);
+                    p.drawnChips.push({ ...whiteChip, space: p.currentSpace });
                     p.whiteSum += 1;
                 }
             });
@@ -737,26 +737,30 @@
                 }
             }
 
-            // Set 2 Yellow Mandrake
+            // Set 2 Yellow Mandrake (Doubles the movement of the *current* chip if the previous chip was Yellow)
             if (activeSets.yellow === 2 && p.drawnChips.length > 0) {
                 const lastChip = p.drawnChips[p.drawnChips.length - 1];
                 if (lastChip.color === 'yellow') {
                     moveDist *= 2;
-                    logEvent(`${p.name}'s Set 2 Yellow Mandrake doubled ${chip.name}'s movement to ${moveDist}!`);
+                    logEvent(`✨ ${p.name}'s Set 2 Yellow Mandrake doubled ${chip.name}'s movement distance to ${moveDist}!`);
                 }
             }
 
             // Set 4 Red Toadstool (Boosts White 1s)
             if (chip.color === 'white' && chip.val === 1 && activeSets.red === 4) {
                 if (p.drawnChips.some(c => c.color === 'red')) {
-                    moveDist = 2; // Moves 2 spaces, but value remains 1 for explosion
+                    moveDist = 2; 
                     logEvent(`🔥 ${p.name}'s Red Toadstool (Set 4) boosted a White 1-chip to move 2 spaces!`);
                 }
             }
 
             p.currentSpace = Math.min(33, p.currentSpace + moveDist);
-            p.drawnChips.push(chip);
             
+            // Push a copy of the chip that includes the exact board space it landed on
+            const placedChip = { ...chip, space: p.currentSpace };
+            p.drawnChips.push(placedChip);
+            
+            // Always use base chip.val for white explosion penalty, regardless of move distance
             if (chip.color === 'white') p.whiteSum += chip.val;
 
             playSound('draw');
@@ -821,10 +825,16 @@
             const p = players[pIdx];
             if (!p.potionFull || p.exploded || p.drawnChips.length === 0) return;
             const lastChip = p.drawnChips.pop();
+            
             if (lastChip.color === 'white') p.whiteSum -= lastChip.val;
             
-            // Adjust calculation based on rat tails so we don't drop below starting space
-            p.currentSpace = Math.max(p.droplet + p.ratTails, p.currentSpace - lastChip.val);
+            // Revert to the space of the PREVIOUS chip (or starting space if empty)
+            if (p.drawnChips.length > 0) {
+                p.currentSpace = p.drawnChips[p.drawnChips.length - 1].space;
+            } else {
+                p.currentSpace = p.droplet + p.ratTails;
+            }
+            
             p.potionFull = false;
             playSound('potion');
             logEvent(`${p.name} drank Potion! Returned ${lastChip.name}.`);
@@ -1104,15 +1114,15 @@
                 }
             }
 
-            let currPos = p.droplet + p.ratTails;
             p.drawnChips.forEach(chip => {
-                currPos = Math.min(33, currPos + chip.val);
-                if (coords[currPos]) {
-                    ctx.beginPath(); ctx.arc(coords[currPos].x, coords[currPos].y, 11, 0, Math.PI*2);
+                const spaceIdx = chip.space;
+                if (coords[spaceIdx]) {
+                    ctx.beginPath(); ctx.arc(coords[spaceIdx].x, coords[spaceIdx].y, 11, 0, Math.PI*2);
                     ctx.fillStyle = getChipHex(chip.color); ctx.fill();
                     ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5; ctx.stroke();
                     ctx.fillStyle = '#ffffff'; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                    ctx.fillText(chip.val, coords[currPos].x, coords[currPos].y);
+                    // Text always remains base chip val
+                    ctx.fillText(chip.val, coords[spaceIdx].x, coords[spaceIdx].y);
                 }
             });
 
