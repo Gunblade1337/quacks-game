@@ -25,7 +25,7 @@
 
     <!-- Version Badge -->
     <div class="fixed bottom-2 right-3 text-[10px] font-mono text-slate-500 pointer-events-none select-none z-30">
-        v1.0.5
+        v1.0.6
     </div>
 
     <!-- SETUP / LOBBY SCREEN -->
@@ -209,7 +209,7 @@
                 <div id="p1-controls" class="space-y-2">
                     <div class="bg-slate-900 rounded-lg p-2 border border-slate-700">
                         <div class="flex justify-between text-[10px] font-bold mb-1">
-                            <span class="text-slate-400">Odds of Exploding (Next Draw)</span>
+                            <span class="text-slate-400">Odds of Exploding <span id="p1-bust-shield"></span></span>
                             <span id="p1-bust-text" class="text-emerald-400">0%</span>
                         </div>
                         <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
@@ -282,7 +282,7 @@
                 <div id="p2-controls" class="space-y-2 opacity-50 pointer-events-none">
                     <div class="bg-slate-900 rounded-lg p-2 border border-slate-700">
                         <div class="flex justify-between text-[10px] font-bold mb-1">
-                            <span class="text-slate-400">Odds of Exploding (Next Draw)</span>
+                            <span class="text-slate-400">Odds of Exploding <span id="p2-bust-shield"></span></span>
                             <span id="p2-bust-text" class="text-emerald-400">0%</span>
                         </div>
                         <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
@@ -480,7 +480,7 @@
             2: {
                 orange: "Standard value.",
                 red: "Bonus coins equal to value if adjacent to Orange Pumpkins.",
-                blue: "If potion explodes next chip, still receive BOTH VP and Coins.",
+                blue: "If potion explodes on next [value] chips drawn, turn ends but player safely receives BOTH VP and Coins. (No die roll).",
                 green: "End-of-round bonus chips if placed near end of pot.",
                 yellow: "The very NEXT drawn chip after this Mandrake is moved twice as far.",
                 purple: "End-of-round VP scaling based on total purple count."
@@ -503,7 +503,6 @@
             }
         };
 
-        // Holds individual custom set choices
         let activeSets = {
             red: 1,
             blue: 1,
@@ -591,7 +590,7 @@
             return {
                 name: name, droplet: 0, ratTails: 0, potionFull: true, vp: 0, rubies: 2, whiteSum: 0,
                 currentSpace: 0, exploded: false, explosionChoice: null, finished: false, drawnChips: [],
-                greenSpiderUses: 0,
+                greenSpiderUses: 0, blueSafetyTokens: 0, explodedProtected: false,
                 bag: [
                     { color: 'white', val: 1, name: 'White 1' }, { color: 'white', val: 1, name: 'White 1' },
                     { color: 'white', val: 1, name: 'White 1' }, { color: 'white', val: 2, name: 'White 2' },
@@ -658,7 +657,7 @@
             players.forEach(p => {
                 p.drawnChips = []; p.whiteSum = 0;
                 
-                // Calculate Rat Tails Catch-up (Multiplayer only, from Round 2)
+                // Rat Tails Catch-up
                 if (gameMode === '2p' && currentRound >= 2) {
                     p.ratTails = Math.floor((maxVP - p.vp) / 2);
                 } else {
@@ -667,7 +666,9 @@
                 
                 p.currentSpace = p.droplet + p.ratTails;
                 p.exploded = false; p.finished = false; p.explosionChoice = null;
-                p.greenSpiderUses = 0;
+                p.greenSpiderUses = 0; 
+                p.blueSafetyTokens = 0;
+                p.explodedProtected = false;
 
                 if (activeFortuneCard && activeFortuneCard.id === 'feast') {
                     const whiteChip = { color: 'white', val: 1, name: 'White 1' };
@@ -737,7 +738,7 @@
                 }
             }
 
-            // Set 2 Yellow Mandrake (Doubles the movement of the *current* chip if the previous chip was Yellow)
+            // Set 2 Yellow Mandrake 
             if (activeSets.yellow === 2 && p.drawnChips.length > 0) {
                 const lastChip = p.drawnChips[p.drawnChips.length - 1];
                 if (lastChip.color === 'yellow') {
@@ -760,7 +761,9 @@
             const placedChip = { ...chip, space: p.currentSpace };
             p.drawnChips.push(placedChip);
             
-            // Always use base chip.val for white explosion penalty, regardless of move distance
+            // Note: Are we protected on the exact moment this chip explodes us?
+            let wasProtectedByBlue = p.blueSafetyTokens > 0 && activeSets.blue === 2;
+
             if (chip.color === 'white') p.whiteSum += chip.val;
 
             playSound('draw');
@@ -784,9 +787,29 @@
                 p.exploded = true; p.finished = true;
                 playSound('explode');
                 createParticles(200, 200, '#ef4444', true);
-                logEvent(`💥 BOOM! ${p.name}'s pot exploded (${p.whiteSum} white)!`);
+
+                if (wasProtectedByBlue) {
+                    p.explodedProtected = true;
+                    logEvent(`🛡️ BOOM! ${p.name}'s pot exploded, BUT the Blue Crow saved the rewards!`);
+                } else {
+                    logEvent(`💥 BOOM! ${p.name}'s pot exploded (${p.whiteSum} white)!`);
+                }
+
                 handleTurnEnd(pIdx);
+                return;
             }
+            
+            // If we successfully placed without busting, decrement our safety net (if active)
+            if (wasProtectedByBlue) {
+                p.blueSafetyTokens--;
+            }
+            
+            // If the chip we just placed IS a Set 2 Blue Crow, arm the safety net for future chips
+            if (chip.color === 'blue' && activeSets.blue === 2) {
+                p.blueSafetyTokens = chip.val;
+                logEvent(`🛡️ Blue Crow set! Safe from explosion penalties for the next ${chip.val} chip(s).`);
+            }
+
             renderAll();
         }
 
@@ -828,11 +851,16 @@
             
             if (lastChip.color === 'white') p.whiteSum -= lastChip.val;
             
-            // Revert to the space of the PREVIOUS chip (or starting space if empty)
+            // Revert space
             if (p.drawnChips.length > 0) {
                 p.currentSpace = p.drawnChips[p.drawnChips.length - 1].space;
             } else {
                 p.currentSpace = p.droplet + p.ratTails;
+            }
+
+            // Revert Blue Set 2 Safety Net simple logic: 
+            if (lastChip.color === 'blue' && activeSets.blue === 2) {
+                p.blueSafetyTokens = 0;
             }
             
             p.potionFull = false;
@@ -861,7 +889,8 @@
         }
 
         function promptExplosionChoices() {
-            const bustedPlayerIdx = players.findIndex(p => p.exploded && !p.explosionChoice);
+            // Protected players bypass the choice modal completely
+            const bustedPlayerIdx = players.findIndex(p => p.exploded && !p.explosionChoice && !p.explodedProtected);
             if (bustedPlayerIdx !== -1) {
                 pendingExplosionPlayer = bustedPlayerIdx;
                 const p = players[bustedPlayerIdx];
@@ -888,6 +917,8 @@
 
         function startDicePhase() {
             eligibleDiceRollers = [];
+            
+            // Exploding normally OR exploding protected BOTH forfeit the dice phase
             if (gameMode === '1p') {
                 if (!players[0].exploded) eligibleDiceRollers.push(0);
             } else {
@@ -989,12 +1020,20 @@
             
             const textEl = document.getElementById(`${prefix}-bust-text`);
             const barEl = document.getElementById(`${prefix}-bust-bar`);
+            const shieldEl = document.getElementById(`${prefix}-bust-shield`);
             
             textEl.innerText = `${pct}%`;
             barEl.style.width = `${pct}%`;
             
             let barColor = pct < 25 ? 'bg-emerald-500' : pct < 50 ? 'bg-amber-500' : 'bg-red-500';
             let textColor = pct < 25 ? 'text-emerald-400' : pct < 50 ? 'text-amber-400' : 'text-red-400';
+            
+            if (p.blueSafetyTokens > 0 && activeSets.blue === 2) {
+                shieldEl.innerHTML = `🛡️ Safe (${p.blueSafetyTokens})`;
+                shieldEl.className = "text-sky-400 ml-1";
+            } else {
+                shieldEl.innerHTML = '';
+            }
             
             barEl.className = `${barColor} h-full transition-all duration-300`;
             textEl.className = `${textColor}`;
@@ -1098,13 +1137,11 @@
                 }
             });
 
-            // Draw Droplet token
             if (coords[p.droplet]) {
                 ctx.beginPath(); ctx.arc(coords[p.droplet].x, coords[p.droplet].y, 10, 0, Math.PI*2);
                 ctx.fillStyle = '#10b981'; ctx.fill();
             }
 
-            // Draw Rat token
             if (p.ratTails > 0) {
                 const ratPos = p.droplet + p.ratTails;
                 if (coords[ratPos]) {
@@ -1121,7 +1158,6 @@
                     ctx.fillStyle = getChipHex(chip.color); ctx.fill();
                     ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5; ctx.stroke();
                     ctx.fillStyle = '#ffffff'; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                    // Text always remains base chip val
                     ctx.fillText(chip.val, coords[spaceIdx].x, coords[spaceIdx].y);
                 }
             });
@@ -1155,13 +1191,17 @@
             players.forEach(p => {
                 const spaceData = TRACK[p.currentSpace] || TRACK[33];
                 if (p.exploded) {
-                    if (p.explosionChoice === 'vp') p.vp += spaceData.vp;
+                    if (p.explodedProtected) {
+                        p.vp += spaceData.vp; // Gets both
+                    } else if (p.explosionChoice === 'vp') {
+                        p.vp += spaceData.vp;
+                    }
                 } else {
                     p.vp += spaceData.vp;
                 }
+                
                 if (spaceData.ruby) p.rubies += 1;
 
-                // Set 1 Green Garden Spider Ruby Logic
                 if (activeSets.green === 1 && p.drawnChips.length > 0) {
                     const lastChip = p.drawnChips[p.drawnChips.length - 1];
                     const nextToLast = p.drawnChips.length > 1 ? p.drawnChips[p.drawnChips.length - 2] : null;
@@ -1169,7 +1209,6 @@
                     if (nextToLast && nextToLast.color === 'green') p.rubies += 1;
                 }
                 
-                // Set 4 Green Garden Spider Droplet Tracking
                 if (activeSets.green === 4 && p.drawnChips.length > 0) {
                     const lastChip = p.drawnChips[p.drawnChips.length - 1];
                     const nextToLast = p.drawnChips.length > 1 ? p.drawnChips[p.drawnChips.length - 2] : null;
@@ -1182,7 +1221,7 @@
             currentTurnPurchases = [];
             const p = players[currentShopperIndex];
             const spaceData = TRACK[p.currentSpace] || TRACK[33];
-            currentTurnCoins = (p.exploded && p.explosionChoice === 'vp') ? 0 : spaceData.coins;
+            currentTurnCoins = (p.exploded && !p.explodedProtected && p.explosionChoice === 'vp') ? 0 : spaceData.coins;
 
             renderShopModalUI();
             document.getElementById('end-round-modal').classList.remove('hidden');
@@ -1195,7 +1234,11 @@
                 const pSpaceData = TRACK[pl.currentSpace] || TRACK[33];
                 let summaryText = `Earned ${pSpaceData.coins} Coins & +${pSpaceData.vp} VP`;
                 if (pl.exploded) {
-                    summaryText = pl.explosionChoice === 'vp' ? `💥 Took +${pSpaceData.vp} VP (Forfeited Coins)` : `💥 Took ${pSpaceData.coins} Coins (Forfeited VP)`;
+                    if (pl.explodedProtected) {
+                        summaryText = `🛡️ Protected Bust: Earned ${pSpaceData.coins} Coins & +${pSpaceData.vp} VP`;
+                    } else {
+                        summaryText = pl.explosionChoice === 'vp' ? `💥 Took +${pSpaceData.vp} VP (Forfeited Coins)` : `💥 Took ${pSpaceData.coins} Coins (Forfeited VP)`;
+                    }
                 }
                 return `
                     <div class="p-2.5 bg-slate-800 rounded-lg border ${idx === currentShopperIndex ? 'border-amber-500 shadow-md' : 'border-slate-700'} space-y-1">
@@ -1211,7 +1254,6 @@
 
             const flaskCost = (activeFortuneCard && activeFortuneCard.id === 'flask') ? 1 : 2;
 
-            // Inject all buttons together dynamically to prevent null reference crashes
             const spiderBtnHtml = (activeSets.green === 4 && p.greenSpiderUses > 0) ? `
                 <button onclick="buySpiderDroplet()" class="p-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed border border-green-500 rounded-lg text-left text-xs space-y-0.5 transition-all active:scale-95" ${p.rubies < 1 ? 'disabled' : ''}>
                     <div class="font-bold text-green-400">Spider Droplet (1 Ruby)</div>
@@ -1255,7 +1297,7 @@
                 currentTurnPurchases = [];
                 const p = players[currentShopperIndex];
                 const spaceData = TRACK[p.currentSpace] || TRACK[33];
-                currentTurnCoins = (p.exploded && p.explosionChoice === 'vp') ? 0 : spaceData.coins;
+                currentTurnCoins = (p.exploded && !p.explodedProtected && p.explosionChoice === 'vp') ? 0 : spaceData.coins;
                 renderShopModalUI();
             } else {
                 startNextRound();
