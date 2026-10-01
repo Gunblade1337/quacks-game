@@ -19,18 +19,25 @@
         canvas {
             touch-action: none;
         }
+        .hide-scroll::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scroll {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center p-2 sm:p-4 selection:bg-amber-500 selection:text-slate-900">
 
     <!-- Version Badge -->
     <div class="fixed bottom-2 right-3 text-[10px] font-mono text-slate-500 pointer-events-none select-none z-30">
-        v1.0.10
+        v1.1.0
     </div>
 
     <!-- PEEK BOARD RETURN BUTTON -->
     <button id="peek-return-btn" class="fixed top-6 left-1/2 transform -translate-x-1/2 z-[100] bg-indigo-600 hover:bg-indigo-500 text-white font-black text-sm px-6 py-3 rounded-full shadow-[0_0_25px_rgba(79,70,229,0.6)] hidden transition-all active:scale-95 border-2 border-indigo-400 flex items-center space-x-2">
-        <span class="text-lg">👁️</span>
+        <span class="text-lg">👁️️</span>
         <span>RETURN TO DECISION</span>
     </button>
 
@@ -190,6 +197,15 @@
                     </div>
                 </div>
 
+                <!-- Test Tube Track -->
+                <div class="bg-slate-900/60 p-2 rounded-xl border border-slate-700/50 space-y-1">
+                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex justify-between">
+                        <span>🧪 Test Tube (Vial) Tracker</span>
+                        <span id="p1-vial-level" class="text-fuchsia-400">Level 0 / 12</span>
+                    </div>
+                    <div class="flex overflow-x-auto hide-scroll gap-1 pb-1" id="p1-vial-track"></div>
+                </div>
+
                 <div class="bg-slate-900/80 rounded-xl p-2.5 border border-slate-700 space-y-1.5">
                     <div class="flex justify-between items-center">
                         <h3 class="text-[11px] font-bold text-amber-400 uppercase tracking-wider">Ingredients Placed</h3>
@@ -271,6 +287,15 @@
                     </div>
                 </div>
 
+                <!-- Test Tube Track -->
+                <div class="bg-slate-900/60 p-2 rounded-xl border border-slate-700/50 space-y-1">
+                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex justify-between">
+                        <span>🧪 Test Tube (Vial) Tracker</span>
+                        <span id="p2-vial-level" class="text-fuchsia-400">Level 0 / 12</span>
+                    </div>
+                    <div class="flex overflow-x-auto hide-scroll gap-1 pb-1" id="p2-vial-track"></div>
+                </div>
+
                 <div class="bg-slate-900/80 rounded-xl p-2.5 border border-slate-700 space-y-1.5">
                     <div class="flex justify-between items-center">
                         <h3 class="text-[11px] font-bold text-amber-400 uppercase tracking-wider">Ingredients Placed</h3>
@@ -324,6 +349,43 @@
 
     <!-- MODALS -->
 
+    <!-- Droplet Choice Modal -->
+    <div id="droplet-choice-modal" class="fixed inset-0 modal-bg z-[80] hidden flex items-center justify-center p-4">
+        <div class="bg-slate-800 border-2 border-emerald-500/50 rounded-2xl max-w-sm w-full p-6 text-center space-y-5 shadow-2xl relative overflow-hidden">
+            <div class="text-4xl">💧</div>
+            <div>
+                <h3 class="font-black text-2xl text-emerald-400">Droplet Advance!</h3>
+                <p class="text-slate-300 text-xs mt-1">You earned a droplet movement. Where would you like to place it?</p>
+            </div>
+            
+            <div class="grid grid-cols-1 gap-3 pt-2">
+                <button onclick="chooseDropletPath('pot')" class="p-4 bg-slate-900 hover:bg-slate-700 border border-emerald-500/50 rounded-xl flex flex-col items-center justify-center space-y-1 transition-all active:scale-95">
+                    <span class="text-sm font-bold text-slate-200">Advance Starting Pot Space</span>
+                    <span class="text-[10px] text-emerald-400 font-bold">Move permanently forward on spiral</span>
+                </button>
+                <button id="droplet-vial-btn" onclick="chooseDropletPath('vial')" class="p-4 bg-slate-900 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed border border-fuchsia-500/50 rounded-xl flex flex-col items-center justify-center space-y-1 transition-all active:scale-95">
+                    <span class="text-sm font-bold text-slate-200" id="droplet-vial-text">Advance Test Tube (Vial)</span>
+                    <span class="text-[10px] text-fuchsia-400 font-bold" id="droplet-vial-desc">Unlock immediate reward</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vial Chip Choice Modal -->
+    <div id="vial-chip-choice-modal" class="fixed inset-0 modal-bg z-[90] hidden flex items-center justify-center p-4">
+        <div class="bg-slate-800 border-2 border-fuchsia-500/50 rounded-2xl max-w-sm w-full p-6 text-center space-y-5 shadow-2xl relative overflow-hidden">
+            <div class="text-4xl">🧪</div>
+            <div>
+                <h3 class="font-black text-xl text-fuchsia-400">Test Tube Choice!</h3>
+                <p class="text-slate-300 text-xs mt-1">Choose which chip to add to your bag.</p>
+            </div>
+            
+            <div id="vial-chip-options" class="grid grid-cols-2 gap-3 pt-2">
+                <!-- Dynamically populated -->
+            </div>
+        </div>
+    </div>
+
     <!-- Bonus Alert Modal -->
     <div id="bonus-alert-modal" class="fixed inset-0 modal-bg z-[70] hidden flex items-center justify-center p-4">
         <div class="bg-slate-800 border-2 border-emerald-500/50 rounded-2xl max-w-sm w-full p-6 text-center space-y-5 shadow-2xl relative overflow-hidden">
@@ -343,7 +405,7 @@
         <div class="bg-slate-800 border-2 border-red-500/50 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl relative">
             <div class="flex justify-between items-start border-b border-slate-700/50 pb-2">
                 <h3 class="font-black text-xl text-red-400">Set Aside Red Toadstools</h3>
-                <button onclick="peekBoard('red-resolution-modal')" class="bg-slate-700 hover:bg-slate-600 text-xl px-2 py-1 rounded transition-colors" title="View Board">👁️</button>
+                <button onclick="peekBoard('red-resolution-modal')" class="bg-slate-700 hover:bg-slate-600 text-xl px-2 py-1 rounded transition-colors" title="View Board">👁️️</button>
             </div>
             <p class="text-slate-300 text-xs text-center">You stopped drawing. Choose what to do with your set-aside Red chips before moving on.</p>
             <div id="red-res-chips" class="space-y-2 max-h-48 overflow-y-auto"></div>
@@ -507,6 +569,21 @@
             { space: 32, vp: 8, coins: 23, ruby: true }, { space: 33, vp: 8, coins: 24, ruby: false }
         ];
 
+        const VIAL_REWARDS = [
+            {icon: '💎', desc: '+1 Ruby'},
+            {icon: '🌟1', desc: '+1 VP'},
+            {icon: '🔵1', desc: '+Blue 1'},
+            {icon: '💎', desc: '+1 Ruby'},
+            {icon: '⚫1', desc: '+Black 1'},
+            {icon: '🌟2', desc: '+2 VP'},
+            {icon: '💎', desc: '+1 Ruby'},
+            {icon: '❓', desc: 'Red 2 or Green 2'},
+            {icon: '🌟3', desc: '+3 VP'},
+            {icon: '💎', desc: '+1 Ruby'},
+            {icon: '❓', desc: 'Yel 4 or Purp 2'},
+            {icon: '🌟4', desc: '+4 VP'},
+        ];
+
         const FORTUNE_TELLER_CARDS = [
             { id: 'feast', title: "The Alchemist's Feast", desc: "All players draw 1 extra white chip from their bag and place it in their pot before starting." },
             { id: 'market', title: "Flea Market", desc: "Ingredient chips cost 1 coin less during this round's market phase." },
@@ -551,13 +628,7 @@
             }
         };
 
-        let activeSets = {
-            red: 1,
-            blue: 1,
-            green: 1,
-            yellow: 1,
-            purple: 1
-        };
+        let activeSets = { red: 1, blue: 1, green: 1, yellow: 1, purple: 1 };
 
         let audioCtx;
         function initAudio() {
@@ -619,9 +690,14 @@
         let currentTurnPurchases = [];
         
         let pendingExplosionPlayer = null;
-        let players = [createNewPlayerState("Player 1"), createNewPlayerState("Player 2")];
         let pendingCrowCandidates = [];
         let pendingBonusCallback = null;
+        
+        // Droplet Interception State
+        let pendingDropletPlayer = null;
+        let pendingDropletContext = null;
+        
+        let players = [createNewPlayerState("Player 1"), createNewPlayerState("Player 2")];
         
         let eligibleDiceRollers = [];
         let currentDiceRollerIndex = 0;
@@ -637,7 +713,7 @@
 
         function createNewPlayerState(name) {
             return {
-                name: name, droplet: 0, ratTails: 0, potionFull: true, vp: 0, rubies: 2, whiteSum: 0,
+                name: name, droplet: 0, testTubeLevel: 0, ratTails: 0, potionFull: true, vp: 0, rubies: 2, whiteSum: 0,
                 currentSpace: 0, exploded: false, explosionChoice: null, finished: false, drawnChips: [],
                 greenSpiderUses: 0, blueSafetyTokens: 0, explodedProtected: false, 
                 asideRedChips: [], pendingGreenRewards: [], green3Triggered: false,
@@ -1042,7 +1118,6 @@
         function handleTurnEnd(pIdx) {
             const p = players[pIdx];
             
-            // Check Green Set 3 logic after any Red Set 2 placements are finalized
             if (!p.exploded && activeSets.green === 3 && p.whiteSum === 7) {
                 if (!p.green3Triggered) {
                     const greenSum = p.drawnChips.filter(c => c.color === 'green').reduce((sum, c) => sum + c.val, 0);
@@ -1059,7 +1134,7 @@
                         showBonusModal(`🕷️ Green Spider Bonus!`, `${p.name} stopped with exactly 7 white! Their last chip jumped ${greenSum} extra spaces!`, () => {
                             continueTurnEnd(pIdx);
                         });
-                        return; // Halt logic flow until the modal is dismissed
+                        return;
                     }
                     p.green3Triggered = true;
                 }
@@ -1162,17 +1237,20 @@
                     face.innerText = finalFace.icon;
                     document.getElementById('dice-result-text').innerText = finalFace.text;
                     
-                    if (finalFace.vp) p.vp += finalFace.vp;
-                    if (finalFace.ruby) p.rubies += finalFace.ruby;
-                    if (finalFace.droplet) p.droplet += finalFace.droplet;
-                    if (finalFace.pumpkin) {
-                        p.bag.push({ color: 'orange', val: 1, name: 'Orange Pumpkin 1' });
+                    if (finalFace.droplet) {
+                        logEvent(`🎲 ${p.name} rolled the Bonus Die and won: +1 Droplet Space!`);
+                        playSound('coin');
+                        initiateDropletChoice(pIdx, 'dice');
+                    } else {
+                        if (finalFace.vp) p.vp += finalFace.vp;
+                        if (finalFace.ruby) p.rubies += finalFace.ruby;
+                        if (finalFace.pumpkin) p.bag.push({ color: 'orange', val: 1, name: 'Orange Pumpkin 1' });
+                        
+                        logEvent(`🎲 ${p.name} rolled the Bonus Die and won: ${finalFace.text}!`);
+                        playSound('coin');
+                        renderAll();
+                        document.getElementById('dice-continue-btn').classList.remove('hidden');
                     }
-                    
-                    logEvent(`🎲 ${p.name} rolled the Bonus Die and won: ${finalFace.text}!`);
-                    playSound('coin');
-                    renderAll();
-                    document.getElementById('dice-continue-btn').classList.remove('hidden');
                 }
             }, 60);
         }
@@ -1180,6 +1258,114 @@
         function continueDicePhase() {
             currentDiceRollerIndex++;
             processNextDiceRoller();
+        }
+
+        /* --- DROPLET INTERCEPTOR LOGIC --- */
+
+        function initiateDropletChoice(pIdx, context) {
+            pendingDropletPlayer = pIdx;
+            pendingDropletContext = context;
+            const p = players[pIdx];
+
+            const vialBtn = document.getElementById('droplet-vial-btn');
+            const vialText = document.getElementById('droplet-vial-text');
+            const vialDesc = document.getElementById('droplet-vial-desc');
+
+            if (p.testTubeLevel >= 12) {
+                vialBtn.disabled = true;
+                vialText.innerText = "Test Tube Maxed Out";
+                vialDesc.innerText = "Level 12 reached";
+            } else {
+                vialBtn.disabled = false;
+                const nextLevel = p.testTubeLevel + 1;
+                vialText.innerText = `Advance Test Tube to Level ${nextLevel}`;
+                vialDesc.innerText = `Reward: ${VIAL_REWARDS[nextLevel - 1].desc}`;
+            }
+
+            document.getElementById('droplet-choice-modal').classList.remove('hidden');
+        }
+
+        function chooseDropletPath(path) {
+            document.getElementById('droplet-choice-modal').classList.add('hidden');
+            const p = players[pendingDropletPlayer];
+
+            if (path === 'pot') {
+                p.droplet += 1;
+                logEvent(`💧 ${p.name} chose to advance their Pot Droplet to Space ${p.droplet}.`);
+                finishDropletChoice();
+            } else if (path === 'vial') {
+                p.testTubeLevel += 1;
+                applyVialReward(p.testTubeLevel);
+            }
+        }
+
+        function applyVialReward(lvl) {
+            const p = players[pendingDropletPlayer];
+            let needsChoice = false;
+
+            if (lvl === 1 || lvl === 4 || lvl === 7 || lvl === 10) {
+                p.rubies += 1;
+                logEvent(`🧪 ${p.name} reached Test Tube Level ${lvl}: Gained +1 Ruby!`);
+            } else if (lvl === 2) {
+                p.vp += 1; logEvent(`🧪 ${p.name} reached Test Tube Level 2: Gained +1 VP!`);
+            } else if (lvl === 3) {
+                p.bag.push({color: 'blue', val: 1, name: 'Crow Skull 1'}); logEvent(`🧪 ${p.name} reached Level 3: Gained Blue 1 to bag!`);
+            } else if (lvl === 5) {
+                p.bag.push({color: 'black', val: 1, name: 'Black Moth 1'}); logEvent(`🧪 ${p.name} reached Level 5: Gained Black 1 to bag!`);
+            } else if (lvl === 6) {
+                p.vp += 2; logEvent(`🧪 ${p.name} reached Level 6: Gained +2 VP!`);
+            } else if (lvl === 8) {
+                needsChoice = true;
+                showVialChoiceModal('red2_green2');
+            } else if (lvl === 9) {
+                p.vp += 3; logEvent(`🧪 ${p.name} reached Level 9: Gained +3 VP!`);
+            } else if (lvl === 11) {
+                needsChoice = true;
+                showVialChoiceModal('yellow4_purple2');
+            } else if (lvl === 12) {
+                p.vp += 4; logEvent(`🧪 ${p.name} reached Level 12: Gained +4 VP!`);
+            }
+
+            if (!needsChoice) finishDropletChoice();
+        }
+
+        function showVialChoiceModal(choiceType) {
+            const container = document.getElementById('vial-chip-options');
+            if (choiceType === 'red2_green2') {
+                container.innerHTML = `
+                    <button onclick="resolveVialChipChoice('red2')" class="p-3 bg-red-900 border border-red-500 rounded-xl text-red-300 font-bold text-sm hover:bg-red-800 transition">Red Toadstool 2</button>
+                    <button onclick="resolveVialChipChoice('green2')" class="p-3 bg-green-900 border border-green-500 rounded-xl text-green-300 font-bold text-sm hover:bg-green-800 transition">Green Spider 2</button>
+                `;
+            } else if (choiceType === 'yellow4_purple2') {
+                container.innerHTML = `
+                    <button onclick="resolveVialChipChoice('yellow4')" class="p-3 bg-yellow-900 border border-yellow-500 rounded-xl text-yellow-300 font-bold text-sm hover:bg-yellow-800 transition">Yellow Mandrake 4</button>
+                    <button onclick="resolveVialChipChoice('purple2')" class="p-3 bg-purple-900 border border-purple-500 rounded-xl text-purple-300 font-bold text-sm hover:bg-purple-800 transition">Purple Ghost 2</button>
+                `;
+            }
+            document.getElementById('vial-chip-choice-modal').classList.remove('hidden');
+        }
+
+        function resolveVialChipChoice(choice) {
+            document.getElementById('vial-chip-choice-modal').classList.add('hidden');
+            const p = players[pendingDropletPlayer];
+            
+            if (choice === 'red2') { p.bag.push({color: 'red', val: 2, name: 'Red Toadstool 2'}); logEvent(`🧪 ${p.name} chose Red 2 for their Level 8 reward!`); }
+            else if (choice === 'green2') { p.bag.push({color: 'green', val: 2, name: 'Green Spider 2'}); logEvent(`🧪 ${p.name} chose Green 2 for their Level 8 reward!`); }
+            else if (choice === 'yellow4') { p.bag.push({color: 'yellow', val: 4, name: 'Yellow Mandrake 4'}); logEvent(`🧪 ${p.name} chose Yellow 4 for their Level 11 reward!`); }
+            else if (choice === 'purple2') { p.bag.push({color: 'purple', val: 2, name: 'Purple Ghost 2'}); logEvent(`🧪 ${p.name} chose Purple 2 for their Level 11 reward!`); }
+
+            finishDropletChoice();
+        }
+
+        function finishDropletChoice() {
+            renderAll();
+            if (pendingDropletContext === 'shop') {
+                renderShopModalUI();
+            } else if (pendingDropletContext === 'dice') {
+                document.getElementById('dice-continue-btn').classList.remove('hidden');
+            }
+            pendingDropletPlayer = null;
+            pendingDropletContext = null;
         }
 
         function updateBustMeter(pIdx) {
@@ -1357,7 +1543,7 @@
                 ctx.fillStyle = pt.color; ctx.globalAlpha = pt.life; ctx.fill(); ctx.globalAlpha = 1.0;
             });
             
-            // Dynamic White Sum Indicator for Yellow Set 3
+            // Dynamic White Sum Indicator
             const yellowCount = p.drawnChips.filter(c => c.color === 'yellow').length;
             let maxWhite = 7;
             if (activeSets.yellow === 3) {
@@ -1371,6 +1557,18 @@
             document.getElementById(`${prefix}-coins-val`).innerText = (TRACK[p.currentSpace] || TRACK[33]).coins;
             document.getElementById(`${prefix}-vp-val`).innerText = p.vp + (TRACK[p.currentSpace] || TRACK[33]).vp;
             document.getElementById(`${prefix}-rubies-val`).innerText = p.rubies;
+
+            // Render Vial Track
+            const vialHtml = VIAL_REWARDS.map((r, i) => {
+                let isActive = p.testTubeLevel > i;
+                let isNext = p.testTubeLevel === i;
+                let bgClass = isActive ? 'bg-fuchsia-600 border-fuchsia-400 text-white shadow-[0_0_8px_rgba(192,38,211,0.6)]' : (isNext ? 'bg-slate-700 border-fuchsia-500/50 text-fuchsia-300' : 'bg-slate-800 border-slate-600 text-slate-500');
+                return `<div class="shrink-0 flex flex-col items-center justify-center w-9 h-11 rounded-t-sm rounded-b-xl border border-b-4 ${bgClass} text-xs font-bold transition-all" title="Level ${i+1}: ${r.desc}">
+                    ${r.icon}
+                </div>`;
+            }).join('');
+            document.getElementById(`${prefix}-vial-track`).innerHTML = vialHtml;
+            document.getElementById(`${prefix}-vial-level`).innerText = `Level ${p.testTubeLevel} / 12`;
 
             const placedContainer = document.getElementById(`${prefix}-placed-chips`);
             document.getElementById(`${prefix}-placed-count`).innerText = `${p.drawnChips.length} chips`;
@@ -1515,14 +1713,14 @@
                 const spiderBtnHtml = (activeSets.green === 4 && p.greenSpiderUses > 0) ? `
                     <button onclick="buySpiderDroplet()" class="p-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed border border-green-500 rounded-lg text-left text-xs space-y-0.5 transition-all active:scale-95" ${p.rubies < 1 ? 'disabled' : ''}>
                         <div class="font-bold text-green-400">Spider Droplet (1 Ruby)</div>
-                        <div class="text-slate-400 text-[10px]">Move droplet +1 (${p.greenSpiderUses} use${p.greenSpiderUses>1?'s':''} left)</div>
+                        <div class="text-slate-400 text-[10px]">Earn droplet advance (${p.greenSpiderUses} use${p.greenSpiderUses>1?'s':''} left)</div>
                     </button>
                 ` : '';
                 
                 document.getElementById('ruby-purchases-container').innerHTML = `
                     <button id="ruby-droplet-btn" onclick="buyDroplet()" class="p-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed border border-slate-600 rounded-lg text-left text-xs space-y-0.5 transition-all active:scale-95" ${p.rubies < 2 ? 'disabled' : ''}>
-                        <div class="font-bold text-emerald-400">+1 Droplet Space (2 Rubies)</div>
-                        <div class="text-slate-400 text-[10px]">Permanently advances starting point</div>
+                        <div class="font-bold text-emerald-400">+1 Droplet Advance (2 Rubies)</div>
+                        <div class="text-slate-400 text-[10px]">Spiral Track or Test Tube</div>
                     </button>
                     <button id="ruby-potion-btn" onclick="buyPotionRefill()" class="p-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed border border-slate-600 rounded-lg text-left text-xs space-y-0.5 transition-all active:scale-95" ${p.rubies < flaskCost || p.potionFull ? 'disabled' : ''}>
                         <div class="font-bold text-cyan-400">Refill Potion Flask (${flaskCost} Rubies)</div>
@@ -1549,11 +1747,18 @@
             const p = players[currentShopperIndex];
             if (p.rubies >= 1 && p.greenSpiderUses > 0) {
                 p.rubies -= 1;
-                p.droplet += 1;
                 p.greenSpiderUses -= 1;
                 playSound('coin');
-                logEvent(`${p.name} used Set 4 Spider: spent 1 Ruby -> Droplet moved to Space ${p.droplet}.`);
-                renderShopModalUI(); renderAll();
+                initiateDropletChoice(currentShopperIndex, 'shop');
+            }
+        }
+
+        function buyDroplet() {
+            const p = players[currentShopperIndex];
+            if (p.rubies >= 2) {
+                p.rubies -= 2;
+                playSound('coin');
+                initiateDropletChoice(currentShopperIndex, 'shop');
             }
         }
 
@@ -1624,16 +1829,6 @@
                 currentTurnPurchases.push(color);
                 logEvent(`${p.name} bought ${color.toUpperCase()} ${val} for ${cost} coins!`);
                 renderShopModalUI();
-            }
-        }
-
-        function buyDroplet() {
-            const p = players[currentShopperIndex];
-            if (p.rubies >= 2) {
-                p.rubies -= 2; p.droplet += 1;
-                playSound('coin');
-                logEvent(`${p.name} spent 2 Rubies -> Droplet moved to Space ${p.droplet}.`);
-                renderShopModalUI(); renderAll();
             }
         }
 
