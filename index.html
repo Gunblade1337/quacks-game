@@ -25,7 +25,7 @@
 
     <!-- Version Badge -->
     <div class="fixed bottom-2 right-3 text-[10px] font-mono text-slate-500 pointer-events-none select-none z-30">
-        v1.0.6
+        v1.0.7
     </div>
 
     <!-- SETUP / LOBBY SCREEN -->
@@ -105,22 +105,10 @@
                 </div>
             </div>
 
-            <div class="bg-slate-900/80 rounded-xl p-3 border border-slate-700 space-y-1.5">
-                <div class="text-[11px] font-bold text-amber-400 uppercase tracking-wider flex justify-between items-center">
-                    <span>Campaign Target Goals (9-Round VP Tiers)</span>
-                </div>
-                <div class="grid grid-cols-2 gap-1.5 text-[11px] text-slate-300">
-                    <div class="bg-slate-800 p-1.5 rounded border border-slate-700/60">🎓 <strong>Apprentice:</strong> &lt;35 VP</div>
-                    <div class="bg-slate-800 p-1.5 rounded border border-slate-700/60">🧪 <strong>Journeyman:</strong> 35–54 VP</div>
-                    <div class="bg-slate-800 p-1.5 rounded border border-slate-700/60">🌟 <strong>Master:</strong> 55–74 VP</div>
-                    <div class="bg-slate-800 p-1.5 rounded border border-slate-700/60">👑 <strong>Guildmaster:</strong> 75+ VP</div>
-                </div>
-            </div>
+            <button onclick="startGame()" class="w-full py-3.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-base rounded-xl shadow-lg transition-all active:scale-[0.98]">
+                START 9-ROUND GAME
+            </button>
         </div>
-
-        <button onclick="startGame()" class="w-full py-3.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-base rounded-xl shadow-lg transition-all active:scale-[0.98]">
-            START 9-ROUND GAME
-        </button>
     </div>
 
     <!-- PASS & PLAY PRIVACY INTERCEPTOR MODAL -->
@@ -206,6 +194,14 @@
                     </div>
                 </div>
 
+                <!-- Set Aside Zone P1 -->
+                <div id="p1-aside-red-container" class="bg-slate-900/80 rounded-xl p-2.5 border border-red-500/40 space-y-1.5 hidden">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-[11px] font-bold text-red-400 uppercase tracking-wider">Set Aside (Red Toadstools)</h3>
+                    </div>
+                    <div id="p1-aside-red" class="flex flex-wrap gap-1.5 max-h-20 overflow-y-auto pr-1 text-xs"></div>
+                </div>
+
                 <div id="p1-controls" class="space-y-2">
                     <div class="bg-slate-900 rounded-lg p-2 border border-slate-700">
                         <div class="flex justify-between text-[10px] font-bold mb-1">
@@ -279,6 +275,14 @@
                     </div>
                 </div>
 
+                <!-- Set Aside Zone P2 -->
+                <div id="p2-aside-red-container" class="bg-slate-900/80 rounded-xl p-2.5 border border-red-500/40 space-y-1.5 hidden">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-[11px] font-bold text-red-400 uppercase tracking-wider">Set Aside (Red Toadstools)</h3>
+                    </div>
+                    <div id="p2-aside-red" class="flex flex-wrap gap-1.5 max-h-20 overflow-y-auto pr-1 text-xs"></div>
+                </div>
+
                 <div id="p2-controls" class="space-y-2 opacity-50 pointer-events-none">
                     <div class="bg-slate-900 rounded-lg p-2 border border-slate-700">
                         <div class="flex justify-between text-[10px] font-bold mb-1">
@@ -313,6 +317,17 @@
     </div>
 
     <!-- MODALS -->
+
+    <!-- Red Resolution Modal -->
+    <div id="red-resolution-modal" class="fixed inset-0 modal-bg z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-800 border-2 border-red-500/50 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl relative">
+            <h3 class="font-black text-2xl text-red-400 text-center">Set Aside Red Toadstools</h3>
+            <p class="text-slate-300 text-xs text-center">You stopped drawing. Choose what to do with your set-aside Red chips before moving on.</p>
+            <div id="red-res-chips" class="space-y-2 max-h-48 overflow-y-auto"></div>
+            <div id="red-res-footer"></div>
+        </div>
+    </div>
+
     <div id="explosion-choice-modal" class="fixed inset-0 modal-bg z-50 hidden flex items-center justify-center p-4">
         <div class="bg-slate-800 border-2 border-red-500/50 rounded-2xl max-w-md w-full p-6 text-center space-y-5 shadow-2xl relative overflow-hidden">
             <div class="absolute inset-0 bg-red-900/10 pointer-events-none"></div>
@@ -392,23 +407,30 @@
             </div>
             <div id="round-rewards-summary" class="bg-slate-900/80 p-3 rounded-xl border border-slate-700 space-y-2 text-xs"></div>
 
-            <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700 space-y-2">
-                <div class="flex justify-between items-center">
-                    <h4 class="font-bold text-xs text-rose-400 uppercase tracking-wide">Ruby Purchases</h4>
-                    <span id="market-rubies-left" class="text-xs font-bold text-rose-400 bg-rose-500/20 px-2 py-0.5 rounded border border-rose-500/30">Rubies: 2</span>
+            <!-- Green Spider Set 2 Reward Interceptor -->
+            <div id="green-spider-rewards-container" class="bg-slate-900/80 p-4 rounded-xl border border-green-500/50 hidden"></div>
+
+            <!-- Standard Shop UI (Hidden while picking green spider rewards) -->
+            <div id="shop-ui-elements" class="space-y-4">
+                <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700 space-y-2">
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-bold text-xs text-rose-400 uppercase tracking-wide">Ruby Purchases</h4>
+                        <span id="market-rubies-left" class="text-xs font-bold text-rose-400 bg-rose-500/20 px-2 py-0.5 rounded border border-rose-500/30">Rubies: 2</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2" id="ruby-purchases-container">
+                        <!-- Buttons are dynamically inserted here -->
+                    </div>
                 </div>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2" id="ruby-purchases-container">
-                    <!-- Buttons are dynamically inserted here -->
+
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-bold text-xs text-amber-400 uppercase tracking-wide">Market Catalog</h4>
+                        <span id="market-coins-left" class="text-xs font-bold text-emerald-400 bg-emerald-500/20 px-2 py-0.5 rounded border border-emerald-500/30">Coins: 0</span>
+                    </div>
+                    <div id="market-catalog" class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1"></div>
                 </div>
             </div>
 
-            <div class="space-y-2">
-                <div class="flex justify-between items-center">
-                    <h4 class="font-bold text-xs text-amber-400 uppercase tracking-wide">Market Catalog</h4>
-                    <span id="market-coins-left" class="text-xs font-bold text-emerald-400 bg-emerald-500/20 px-2 py-0.5 rounded border border-emerald-500/30">Coins: 0</span>
-                </div>
-                <div id="market-catalog" class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1"></div>
-            </div>
             <button id="shop-next-btn" onclick="advanceShop()" class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-slate-950 font-black text-sm rounded-xl shadow-lg mt-4 transition-all active:scale-[0.98]">
                 ADVANCE TO NEXT ROUND
             </button>
@@ -479,9 +501,9 @@
             },
             2: {
                 orange: "Standard value.",
-                red: "Bonus coins equal to value if adjacent to Orange Pumpkins.",
+                red: "When drawn, set aside. After you stop/explode, place in pot, return to bag, or save for future rounds.",
                 blue: "If potion explodes on next [value] chips drawn, turn ends but player safely receives BOTH VP and Coins. (No die roll).",
-                green: "End-of-round bonus chips if placed near end of pot.",
+                green: "If placed last/next-to-last: Gr1 = +Orange 1; Gr2 = Choice of +Blue 1 or +Red 1; Gr4 = Choice of +Yellow 1 or +Purple 1.",
                 yellow: "The very NEXT drawn chip after this Mandrake is moved twice as far.",
                 purple: "End-of-round VP scaling based on total purple count."
             },
@@ -590,7 +612,8 @@
             return {
                 name: name, droplet: 0, ratTails: 0, potionFull: true, vp: 0, rubies: 2, whiteSum: 0,
                 currentSpace: 0, exploded: false, explosionChoice: null, finished: false, drawnChips: [],
-                greenSpiderUses: 0, blueSafetyTokens: 0, explodedProtected: false,
+                greenSpiderUses: 0, blueSafetyTokens: 0, explodedProtected: false, 
+                asideRedChips: [], pendingGreenRewards: [],
                 bag: [
                     { color: 'white', val: 1, name: 'White 1' }, { color: 'white', val: 1, name: 'White 1' },
                     { color: 'white', val: 1, name: 'White 1' }, { color: 'white', val: 2, name: 'White 2' },
@@ -657,7 +680,6 @@
             players.forEach(p => {
                 p.drawnChips = []; p.whiteSum = 0;
                 
-                // Rat Tails Catch-up
                 if (gameMode === '2p' && currentRound >= 2) {
                     p.ratTails = Math.floor((maxVP - p.vp) / 2);
                 } else {
@@ -669,6 +691,8 @@
                 p.greenSpiderUses = 0; 
                 p.blueSafetyTokens = 0;
                 p.explodedProtected = false;
+                p.pendingGreenRewards = [];
+                // Notice: p.asideRedChips persists across rounds intentionally per rulebook!
 
                 if (activeFortuneCard && activeFortuneCard.id === 'feast') {
                     const whiteChip = { color: 'white', val: 1, name: 'White 1' };
@@ -723,22 +747,29 @@
 
         function executeChipPlacement(pIdx, chip) {
             const p = players[pIdx];
+
+            // Set 2 Red Toadstool - Sets aside instead of placing
+            if (chip.color === 'red' && activeSets.red === 2) {
+                p.asideRedChips.push(chip);
+                playSound('draw');
+                logEvent(`🍄 ${p.name} drew a ${chip.name} and set it aside for later.`);
+                renderAll();
+                return; // Exits before adding to pot or evaluating explosion
+            }
+
             let moveDist = chip.val;
 
-            // Set 1 Red Toadstool
             if (chip.color === 'red' && activeSets.red === 1) {
                 const pumpkinCount = p.drawnChips.filter(c => c.color === 'orange').length;
                 if (pumpkinCount >= 3) moveDist += 2;
                 else if (pumpkinCount >= 1) moveDist += 1;
             } 
-            // Set 1 Yellow Mandrake
             else if (chip.color === 'yellow' && activeSets.yellow === 1) {
                 if (p.drawnChips.length > 0 && p.drawnChips[p.drawnChips.length - 1].color === 'white') {
                     moveDist *= 2;
                 }
             }
 
-            // Set 2 Yellow Mandrake 
             if (activeSets.yellow === 2 && p.drawnChips.length > 0) {
                 const lastChip = p.drawnChips[p.drawnChips.length - 1];
                 if (lastChip.color === 'yellow') {
@@ -747,7 +778,6 @@
                 }
             }
 
-            // Set 4 Red Toadstool (Boosts White 1s)
             if (chip.color === 'white' && chip.val === 1 && activeSets.red === 4) {
                 if (p.drawnChips.some(c => c.color === 'red')) {
                     moveDist = 2; 
@@ -757,11 +787,9 @@
 
             p.currentSpace = Math.min(33, p.currentSpace + moveDist);
             
-            // Push a copy of the chip that includes the exact board space it landed on
             const placedChip = { ...chip, space: p.currentSpace };
             p.drawnChips.push(placedChip);
             
-            // Note: Are we protected on the exact moment this chip explodes us?
             let wasProtectedByBlue = p.blueSafetyTokens > 0 && activeSets.blue === 2;
 
             if (chip.color === 'white') p.whiteSum += chip.val;
@@ -794,17 +822,13 @@
                 } else {
                     logEvent(`💥 BOOM! ${p.name}'s pot exploded (${p.whiteSum} white)!`);
                 }
-
-                handleTurnEnd(pIdx);
+                
+                initiateTurnEndPhase(pIdx);
                 return;
             }
             
-            // If we successfully placed without busting, decrement our safety net (if active)
-            if (wasProtectedByBlue) {
-                p.blueSafetyTokens--;
-            }
+            if (wasProtectedByBlue) p.blueSafetyTokens--;
             
-            // If the chip we just placed IS a Set 2 Blue Crow, arm the safety net for future chips
             if (chip.color === 'blue' && activeSets.blue === 2) {
                 p.blueSafetyTokens = chip.val;
                 logEvent(`🛡️ Blue Crow set! Safe from explosion penalties for the next ${chip.val} chip(s).`);
@@ -851,14 +875,12 @@
             
             if (lastChip.color === 'white') p.whiteSum -= lastChip.val;
             
-            // Revert space
             if (p.drawnChips.length > 0) {
                 p.currentSpace = p.drawnChips[p.drawnChips.length - 1].space;
             } else {
                 p.currentSpace = p.droplet + p.ratTails;
             }
 
-            // Revert Blue Set 2 Safety Net simple logic: 
             if (lastChip.color === 'blue' && activeSets.blue === 2) {
                 p.blueSafetyTokens = 0;
             }
@@ -873,6 +895,63 @@
             const p = players[pIdx];
             p.finished = true;
             logEvent(`${p.name} stopped at Space ${p.currentSpace}.`);
+            initiateTurnEndPhase(pIdx);
+        }
+
+        function initiateTurnEndPhase(pIdx) {
+            const p = players[pIdx];
+            // If they have set-aside Red Toadstools, give them the option to place or bag them
+            if (p.asideRedChips && p.asideRedChips.length > 0) {
+                renderRedResolutionModal(pIdx);
+            } else {
+                handleTurnEnd(pIdx);
+            }
+        }
+
+        function renderRedResolutionModal(pIdx) {
+            const p = players[pIdx];
+            const container = document.getElementById('red-res-chips');
+            container.innerHTML = p.asideRedChips.map((c, i) => `
+                <div class="flex justify-between items-center bg-slate-900 p-2 rounded-lg border border-red-500/30">
+                    <span class="font-bold text-red-400 text-sm">${c.name}</span>
+                    <div class="space-x-2">
+                        <button onclick="resolveRedAction(${pIdx}, ${i}, 'place')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded shadow-md transition active:scale-95">Place in Pot</button>
+                        <button onclick="resolveRedAction(${pIdx}, ${i}, 'bag')" class="px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold rounded shadow-md transition active:scale-95">To Bag</button>
+                    </div>
+                </div>
+            `).join('');
+
+            const footer = document.getElementById('red-res-footer');
+            footer.innerHTML = `<button onclick="finishRedResolution(${pIdx})" class="w-full py-3 bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold text-sm rounded-xl transition-all active:scale-95">Done / Keep Remaining Aside</button>`;
+            
+            document.getElementById('red-resolution-modal').classList.remove('hidden');
+        }
+
+        function resolveRedAction(pIdx, chipIdx, action) {
+            const p = players[pIdx];
+            const chip = p.asideRedChips.splice(chipIdx, 1)[0];
+            
+            if (action === 'place') {
+                p.currentSpace = Math.min(33, p.currentSpace + chip.val);
+                p.drawnChips.push({ ...chip, space: p.currentSpace });
+                playSound('draw');
+                logEvent(`🍄 ${p.name} chose to place their set-aside ${chip.name} into the pot!`);
+            } else if (action === 'bag') {
+                p.bag.push(chip);
+                logEvent(`🍄 ${p.name} returned their set-aside ${chip.name} to their bag.`);
+            }
+            
+            renderAll();
+            
+            if (p.asideRedChips.length === 0) {
+                finishRedResolution(pIdx);
+            } else {
+                renderRedResolutionModal(pIdx);
+            }
+        }
+
+        function finishRedResolution(pIdx) {
+            document.getElementById('red-resolution-modal').classList.add('hidden');
             handleTurnEnd(pIdx);
         }
 
@@ -889,7 +968,6 @@
         }
 
         function promptExplosionChoices() {
-            // Protected players bypass the choice modal completely
             const bustedPlayerIdx = players.findIndex(p => p.exploded && !p.explosionChoice && !p.explodedProtected);
             if (bustedPlayerIdx !== -1) {
                 pendingExplosionPlayer = bustedPlayerIdx;
@@ -918,7 +996,6 @@
         function startDicePhase() {
             eligibleDiceRollers = [];
             
-            // Exploding normally OR exploding protected BOTH forfeit the dice phase
             if (gameMode === '1p') {
                 if (!players[0].exploded) eligibleDiceRollers.push(0);
             } else {
@@ -1117,7 +1194,8 @@
 
         function renderPlayerBoard(pIdx) {
             const p = players[pIdx];
-            const canvas = document.getElementById(pIdx === 0 ? 'p1-canvas' : 'p2-canvas');
+            const prefix = pIdx === 0 ? 'p1' : 'p2';
+            const canvas = document.getElementById(`${prefix}-canvas`);
             const ctx = canvas.getContext('2d');
             canvas.width = 400; canvas.height = 400;
             ctx.clearRect(0, 0, 400, 400);
@@ -1167,7 +1245,6 @@
                 ctx.fillStyle = pt.color; ctx.globalAlpha = pt.life; ctx.fill(); ctx.globalAlpha = 1.0;
             });
 
-            const prefix = pIdx === 0 ? 'p1' : 'p2';
             document.getElementById(`${prefix}-white-sum`).innerText = `${p.whiteSum} / 7`;
             document.getElementById(`${prefix}-position`).innerText = `Space ${p.currentSpace}`;
             document.getElementById(`${prefix}-potion-status`).innerText = p.potionFull ? 'Ready' : 'Empty';
@@ -1180,6 +1257,15 @@
             placedContainer.innerHTML = p.drawnChips.length === 0 
                 ? `<span class="text-slate-500 text-[11px] italic">No chips drawn yet this round.</span>`
                 : p.drawnChips.map(c => `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border border-slate-600 shadow-sm" style="background-color:${getChipHex(c.color)}; color: ${c.color === 'white' ? '#0f172a' : '#ffffff'}">${c.name}</span>`).join('');
+                
+            const asideContainer = document.getElementById(`${prefix}-aside-red-container`);
+            const asideContent = document.getElementById(`${prefix}-aside-red`);
+            if (p.asideRedChips && p.asideRedChips.length > 0) {
+                asideContainer.classList.remove('hidden');
+                asideContent.innerHTML = p.asideRedChips.map(c => `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border border-red-500 shadow-sm bg-red-500 text-white">${c.name}</span>`).join('');
+            } else {
+                asideContainer.classList.add('hidden');
+            }
         }
 
         function getChipHex(color) {
@@ -1192,7 +1278,7 @@
                 const spaceData = TRACK[p.currentSpace] || TRACK[33];
                 if (p.exploded) {
                     if (p.explodedProtected) {
-                        p.vp += spaceData.vp; // Gets both
+                        p.vp += spaceData.vp;
                     } else if (p.explosionChoice === 'vp') {
                         p.vp += spaceData.vp;
                     }
@@ -1214,6 +1300,25 @@
                     const nextToLast = p.drawnChips.length > 1 ? p.drawnChips[p.drawnChips.length - 2] : null;
                     if (lastChip.color === 'green') p.greenSpiderUses += 1;
                     if (nextToLast && nextToLast.color === 'green') p.greenSpiderUses += 1;
+                }
+                
+                // Set 2 Green Spider
+                if (activeSets.green === 2 && p.drawnChips.length > 0) {
+                    const lastChip = p.drawnChips[p.drawnChips.length - 1];
+                    const nextToLast = p.drawnChips.length > 1 ? p.drawnChips[p.drawnChips.length - 2] : null;
+                    
+                    [lastChip, nextToLast].forEach(c => {
+                        if (c && c.color === 'green') {
+                            if (c.val === 1) {
+                                p.bag.push({ color: 'orange', val: 1, name: 'Orange Pumpkin 1' });
+                                logEvent(`🕷️ ${p.name}'s Green Spider 1 automatically added an Orange Pumpkin 1 to their bag!`);
+                            } else if (c.val === 2) {
+                                p.pendingGreenRewards.push(2);
+                            } else if (c.val === 4) {
+                                p.pendingGreenRewards.push(4);
+                            }
+                        }
+                    });
                 }
             });
 
@@ -1252,31 +1357,74 @@
             document.getElementById('market-coins-left').innerText = `Coins: ${currentTurnCoins}`;
             document.getElementById('market-rubies-left').innerText = `Rubies: ${p.rubies}`;
 
-            const flaskCost = (activeFortuneCard && activeFortuneCard.id === 'flask') ? 1 : 2;
-
-            const spiderBtnHtml = (activeSets.green === 4 && p.greenSpiderUses > 0) ? `
-                <button onclick="buySpiderDroplet()" class="p-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed border border-green-500 rounded-lg text-left text-xs space-y-0.5 transition-all active:scale-95" ${p.rubies < 1 ? 'disabled' : ''}>
-                    <div class="font-bold text-green-400">Spider Droplet (1 Ruby)</div>
-                    <div class="text-slate-400 text-[10px]">Move droplet +1 (${p.greenSpiderUses} use${p.greenSpiderUses>1?'s':''} left)</div>
-                </button>
-            ` : '';
-            
-            document.getElementById('ruby-purchases-container').innerHTML = `
-                <button id="ruby-droplet-btn" onclick="buyDroplet()" class="p-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed border border-slate-600 rounded-lg text-left text-xs space-y-0.5 transition-all active:scale-95" ${p.rubies < 2 ? 'disabled' : ''}>
-                    <div class="font-bold text-emerald-400">+1 Droplet Space (2 Rubies)</div>
-                    <div class="text-slate-400 text-[10px]">Permanently advances starting point</div>
-                </button>
-                <button id="ruby-potion-btn" onclick="buyPotionRefill()" class="p-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed border border-slate-600 rounded-lg text-left text-xs space-y-0.5 transition-all active:scale-95" ${p.rubies < flaskCost || p.potionFull ? 'disabled' : ''}>
-                    <div class="font-bold text-cyan-400">Refill Potion Flask (${flaskCost} Rubies)</div>
-                    <div class="text-slate-400 text-[10px]">Recharges empty potion</div>
-                </button>
-                ${spiderBtnHtml}
-            `;
-
+            const greenContainer = document.getElementById('green-spider-rewards-container');
+            const shopUI = document.getElementById('shop-ui-elements');
             const nextBtn = document.getElementById('shop-next-btn');
-            nextBtn.innerText = (gameMode === '2p' && currentShopperIndex === 0) ? `FINISH ${p.name.toUpperCase()}'S SHOP & PASS TO PLAYER 2` : "ADVANCE TO NEXT ROUND";
 
-            renderMarketCatalog();
+            // Intercept if there are pending Green Spider choices
+            if (p.pendingGreenRewards && p.pendingGreenRewards.length > 0) {
+                greenContainer.classList.remove('hidden');
+                shopUI.classList.add('hidden');
+                nextBtn.classList.add('hidden');
+                
+                const val = p.pendingGreenRewards[0];
+                if (val === 2) {
+                    greenContainer.innerHTML = `
+                        <h4 class="font-bold text-sm text-green-400">Green Spider Bonus (Val 2)</h4>
+                        <p class="text-xs text-slate-300 mb-3">Choose a chip to add to your bag for free:</p>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="resolveGreenSpiderReward('blue', 1)" class="p-3 bg-sky-900 border border-sky-500 rounded-xl text-sky-300 font-bold text-xs hover:bg-sky-800 transition">Blue Crow 1</button>
+                            <button onclick="resolveGreenSpiderReward('red', 1)" class="p-3 bg-red-900 border border-red-500 rounded-xl text-red-300 font-bold text-xs hover:bg-red-800 transition">Red Toadstool 1</button>
+                        </div>
+                    `;
+                } else if (val === 4) {
+                    greenContainer.innerHTML = `
+                        <h4 class="font-bold text-sm text-green-400">Green Spider Bonus (Val 4)</h4>
+                        <p class="text-xs text-slate-300 mb-3">Choose a chip to add to your bag for free:</p>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="resolveGreenSpiderReward('yellow', 1)" class="p-3 bg-yellow-900 border border-yellow-500 rounded-xl text-yellow-300 font-bold text-xs hover:bg-yellow-800 transition">Yellow Mandrake 1</button>
+                            <button onclick="resolveGreenSpiderReward('purple', 1)" class="p-3 bg-purple-900 border border-purple-500 rounded-xl text-purple-300 font-bold text-xs hover:bg-purple-800 transition">Purple Ghost 1</button>
+                        </div>
+                    `;
+                }
+            } else {
+                // Regular Shop
+                greenContainer.classList.add('hidden');
+                shopUI.classList.remove('hidden');
+                nextBtn.classList.remove('hidden');
+
+                const flaskCost = (activeFortuneCard && activeFortuneCard.id === 'flask') ? 1 : 2;
+                const spiderBtnHtml = (activeSets.green === 4 && p.greenSpiderUses > 0) ? `
+                    <button onclick="buySpiderDroplet()" class="p-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed border border-green-500 rounded-lg text-left text-xs space-y-0.5 transition-all active:scale-95" ${p.rubies < 1 ? 'disabled' : ''}>
+                        <div class="font-bold text-green-400">Spider Droplet (1 Ruby)</div>
+                        <div class="text-slate-400 text-[10px]">Move droplet +1 (${p.greenSpiderUses} use${p.greenSpiderUses>1?'s':''} left)</div>
+                    </button>
+                ` : '';
+                
+                document.getElementById('ruby-purchases-container').innerHTML = `
+                    <button id="ruby-droplet-btn" onclick="buyDroplet()" class="p-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed border border-slate-600 rounded-lg text-left text-xs space-y-0.5 transition-all active:scale-95" ${p.rubies < 2 ? 'disabled' : ''}>
+                        <div class="font-bold text-emerald-400">+1 Droplet Space (2 Rubies)</div>
+                        <div class="text-slate-400 text-[10px]">Permanently advances starting point</div>
+                    </button>
+                    <button id="ruby-potion-btn" onclick="buyPotionRefill()" class="p-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed border border-slate-600 rounded-lg text-left text-xs space-y-0.5 transition-all active:scale-95" ${p.rubies < flaskCost || p.potionFull ? 'disabled' : ''}>
+                        <div class="font-bold text-cyan-400">Refill Potion Flask (${flaskCost} Rubies)</div>
+                        <div class="text-slate-400 text-[10px]">Recharges empty potion</div>
+                    </button>
+                    ${spiderBtnHtml}
+                `;
+
+                nextBtn.innerText = (gameMode === '2p' && currentShopperIndex === 0) ? `FINISH ${p.name.toUpperCase()}'S SHOP & PASS TO PLAYER 2` : "ADVANCE TO NEXT ROUND";
+                renderMarketCatalog();
+            }
+        }
+
+        function resolveGreenSpiderReward(color, val) {
+            const p = players[currentShopperIndex];
+            p.bag.push({ color: color, val: val, name: `${color.charAt(0).toUpperCase() + color.slice(1)} ${val}` });
+            p.pendingGreenRewards.shift();
+            playSound('coin');
+            logEvent(`🕷️ ${p.name} chose ${color} ${val} from their Green Spider bonus!`);
+            renderShopModalUI();
         }
 
         function buySpiderDroplet() {
