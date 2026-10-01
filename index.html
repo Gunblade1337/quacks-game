@@ -25,8 +25,14 @@
 
     <!-- Version Badge -->
     <div class="fixed bottom-2 right-3 text-[10px] font-mono text-slate-500 pointer-events-none select-none z-30">
-        v1.0.7
+        v1.0.8
     </div>
+
+    <!-- PEEK BOARD RETURN BUTTON -->
+    <button id="peek-return-btn" class="fixed top-6 left-1/2 transform -translate-x-1/2 z-[100] bg-indigo-600 hover:bg-indigo-500 text-white font-black text-sm px-6 py-3 rounded-full shadow-[0_0_25px_rgba(79,70,229,0.6)] hidden transition-all active:scale-95 border-2 border-indigo-400 flex items-center space-x-2">
+        <span class="text-lg">👁️</span>
+        <span>RETURN TO DECISION</span>
+    </button>
 
     <!-- SETUP / LOBBY SCREEN -->
     <div id="setup-screen" class="w-full max-w-xl bg-slate-800 rounded-2xl border border-slate-700 p-6 shadow-2xl space-y-5 my-auto z-10 relative">
@@ -321,7 +327,10 @@
     <!-- Red Resolution Modal -->
     <div id="red-resolution-modal" class="fixed inset-0 modal-bg z-50 hidden flex items-center justify-center p-4">
         <div class="bg-slate-800 border-2 border-red-500/50 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl relative">
-            <h3 class="font-black text-2xl text-red-400 text-center">Set Aside Red Toadstools</h3>
+            <div class="flex justify-between items-start border-b border-slate-700/50 pb-2">
+                <h3 class="font-black text-xl text-red-400">Set Aside Red Toadstools</h3>
+                <button onclick="peekBoard('red-resolution-modal')" class="bg-slate-700 hover:bg-slate-600 text-xl px-2 py-1 rounded transition-colors" title="View Board">👁️</button>
+            </div>
             <p class="text-slate-300 text-xs text-center">You stopped drawing. Choose what to do with your set-aside Red chips before moving on.</p>
             <div id="red-res-chips" class="space-y-2 max-h-48 overflow-y-auto"></div>
             <div id="red-res-footer"></div>
@@ -388,9 +397,12 @@
 
     <div id="crow-modal" class="fixed inset-0 modal-bg z-50 hidden flex items-center justify-center p-4">
         <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl">
-            <div class="text-center space-y-1">
-                <h3 class="font-extrabold text-lg text-sky-400">Blue Crow Skull Ability</h3>
-                <p class="text-slate-300 text-xs">Choose 1 candidate to place immediately, or discard back to bag.</p>
+            <div class="flex justify-between items-start border-b border-slate-700/50 pb-2">
+                <div>
+                    <h3 class="font-extrabold text-lg text-sky-400">Blue Crow Skull Ability</h3>
+                    <p class="text-slate-300 text-xs">Choose 1 candidate to place immediately, or discard.</p>
+                </div>
+                <button onclick="peekBoard('crow-modal')" class="bg-slate-700 hover:bg-slate-600 text-xl px-2 py-1 rounded transition-colors" title="View Board">👁️</button>
             </div>
             <div id="crow-candidates" class="grid grid-cols-2 gap-3 py-2"></div>
             <button onclick="discardCrowCandidates()" class="w-full py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-300 font-bold text-xs rounded-xl transition-all active:scale-95">
@@ -410,7 +422,7 @@
             <!-- Green Spider Set 2 Reward Interceptor -->
             <div id="green-spider-rewards-container" class="bg-slate-900/80 p-4 rounded-xl border border-green-500/50 hidden"></div>
 
-            <!-- Standard Shop UI (Hidden while picking green spider rewards) -->
+            <!-- Standard Shop UI -->
             <div id="shop-ui-elements" class="space-y-4">
                 <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700 space-y-2">
                     <div class="flex justify-between items-center">
@@ -641,6 +653,16 @@
             activeSets[color] = parseInt(val);
         }
 
+        function peekBoard(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+            const returnBtn = document.getElementById('peek-return-btn');
+            returnBtn.classList.remove('hidden');
+            returnBtn.onclick = () => {
+                returnBtn.classList.add('hidden');
+                document.getElementById(modalId).classList.remove('hidden');
+            };
+        }
+
         function startGame() {
             initAudio();
             players[0].name = document.getElementById('p1-name-input').value || "Player 1";
@@ -674,6 +696,13 @@
                     players.forEach(p => p.rubies += 1);
                 }
             }
+            
+            if (currentRound === 6) {
+                players.forEach(p => {
+                    p.bag.push({ color: 'white', val: 1, name: 'White 1' });
+                });
+                logEvent(`⚪ ROUND 6 BONUS: Added 1 extra White 1-chip to everyone's bag!`);
+            }
 
             let maxVP = Math.max(...players.map(p => p.vp));
 
@@ -692,7 +721,6 @@
                 p.blueSafetyTokens = 0;
                 p.explodedProtected = false;
                 p.pendingGreenRewards = [];
-                // Notice: p.asideRedChips persists across rounds intentionally per rulebook!
 
                 if (activeFortuneCard && activeFortuneCard.id === 'feast') {
                     const whiteChip = { color: 'white', val: 1, name: 'White 1' };
@@ -754,7 +782,7 @@
                 playSound('draw');
                 logEvent(`🍄 ${p.name} drew a ${chip.name} and set it aside for later.`);
                 renderAll();
-                return; // Exits before adding to pot or evaluating explosion
+                return;
             }
 
             let moveDist = chip.val;
@@ -831,7 +859,7 @@
             
             if (chip.color === 'blue' && activeSets.blue === 2) {
                 p.blueSafetyTokens = chip.val;
-                logEvent(`🛡️ Blue Crow set! Safe from explosion penalties for the next ${chip.val} chip(s).`);
+                logEvent(`🛡️️ Blue Crow set! Safe from explosion penalties for the next ${chip.val} chip(s).`);
             }
 
             renderAll();
@@ -900,7 +928,6 @@
 
         function initiateTurnEndPhase(pIdx) {
             const p = players[pIdx];
-            // If they have set-aside Red Toadstools, give them the option to place or bag them
             if (p.asideRedChips && p.asideRedChips.length > 0) {
                 renderRedResolutionModal(pIdx);
             } else {
@@ -914,7 +941,7 @@
             container.innerHTML = p.asideRedChips.map((c, i) => `
                 <div class="flex justify-between items-center bg-slate-900 p-2 rounded-lg border border-red-500/30">
                     <span class="font-bold text-red-400 text-sm">${c.name}</span>
-                    <div class="space-x-2">
+                    <div class="space-x-2 flex">
                         <button onclick="resolveRedAction(${pIdx}, ${i}, 'place')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded shadow-md transition active:scale-95">Place in Pot</button>
                         <button onclick="resolveRedAction(${pIdx}, ${i}, 'bag')" class="px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold rounded shadow-md transition active:scale-95">To Bag</button>
                     </div>
@@ -1361,7 +1388,6 @@
             const shopUI = document.getElementById('shop-ui-elements');
             const nextBtn = document.getElementById('shop-next-btn');
 
-            // Intercept if there are pending Green Spider choices
             if (p.pendingGreenRewards && p.pendingGreenRewards.length > 0) {
                 greenContainer.classList.remove('hidden');
                 shopUI.classList.add('hidden');
@@ -1388,7 +1414,6 @@
                     `;
                 }
             } else {
-                // Regular Shop
                 greenContainer.classList.add('hidden');
                 shopUI.classList.remove('hidden');
                 nextBtn.classList.remove('hidden');
@@ -1458,6 +1483,7 @@
                 { color: 'orange', val: 1, name: 'Orange Pumpkin 1', cost: Math.max(1, 3 - discount) },
                 { color: 'orange', val: 2, name: 'Orange Pumpkin 2', cost: Math.max(1, 6 - discount) },
                 { color: 'orange', val: 4, name: 'Orange Pumpkin 4', cost: Math.max(1, 12 - discount) },
+                { color: 'orange', val: 6, name: 'Orange Pumpkin 6', cost: Math.max(1, 22 - discount) },
                 { color: 'green', val: 1, name: 'Green Garden Spider 1', cost: Math.max(1, 4 - discount) },
                 { color: 'green', val: 2, name: 'Green Garden Spider 2', cost: Math.max(1, 8 - discount) },
                 { color: 'green', val: 4, name: 'Green Garden Spider 4', cost: Math.max(1, 14 - discount) },
@@ -1541,6 +1567,15 @@
         }
 
         function triggerGameOver() {
+            // Apply Final Ruby Conversions before ranking
+            players.forEach(p => {
+                const rubyVP = Math.floor(p.rubies / 2);
+                if (rubyVP > 0) {
+                    p.vp += rubyVP;
+                    logEvent(`💎 ${p.name} traded in remaining Rubies for ${rubyVP} final VP!`);
+                }
+            });
+
             const stats = document.getElementById('game-over-stats');
             const p1 = players[0], p2 = players[1];
             if (gameMode === '1p') {
@@ -1553,9 +1588,11 @@
                         <div><div class="text-slate-400">Droplet</div><div class="text-emerald-400 font-bold text-base">Space ${p1.droplet}</div></div>
                     </div>`;
             } else {
-                const winner = p1.vp >= p2.vp ? p1 : p2;
+                const winner = p1.vp > p2.vp ? p1 : (p2.vp > p1.vp ? p2 : p1); // Simplified tie breaker
+                const isTie = p1.vp === p2.vp;
+                
                 stats.innerHTML = `<div class="text-xs text-amber-400 uppercase tracking-widest font-bold">Winner</div>
-                    <div class="text-2xl font-black text-white">🏆 ${winner.name}</div>
+                    <div class="text-2xl font-black text-white">${isTie ? "🤝 IT'S A TIE!" : `🏆 ${winner.name}`}</div>
                     <div class="mt-2 text-sm text-slate-300">${p1.name}: ${p1.vp} VP | ${p2.name}: ${p2.vp} VP</div>`;
             }
             document.getElementById('game-over-modal').classList.remove('hidden');
