@@ -25,7 +25,7 @@
 
     <!-- Version Badge -->
     <div class="fixed bottom-2 right-3 text-[10px] font-mono text-slate-500 pointer-events-none select-none z-30">
-        v1.0.9
+        v1.0.10
     </div>
 
     <!-- PEEK BOARD RETURN BUTTON -->
@@ -81,25 +81,25 @@
                     <div class="flex justify-between items-center bg-slate-800 p-1.5 rounded border border-slate-700">
                         <span class="text-[10px] font-bold text-red-400">Red Toadstool</span>
                         <select id="sel-red" onchange="updateSet('red', this.value)" class="bg-slate-900 text-[10px] text-white rounded border border-slate-600 px-1 py-0.5 outline-none font-bold">
-                            <option value="1">Set 1</option><option value="2">Set 2</option><option value="3">Set 3</option><option value="4">Set 4</option>
+                            <option value="1">Set 1</option><option value="2">Set 2</option><option value="3" selected>Set 3</option><option value="4">Set 4</option>
                         </select>
                     </div>
                     <div class="flex justify-between items-center bg-slate-800 p-1.5 rounded border border-slate-700">
                         <span class="text-[10px] font-bold text-blue-400">Blue Crow Skull</span>
                         <select id="sel-blue" onchange="updateSet('blue', this.value)" class="bg-slate-900 text-[10px] text-white rounded border border-slate-600 px-1 py-0.5 outline-none font-bold">
-                            <option value="1">Set 1</option><option value="2">Set 2</option><option value="3">Set 3</option><option value="4">Set 4</option>
+                            <option value="1">Set 1</option><option value="2">Set 2</option><option value="3" selected>Set 3</option><option value="4">Set 4</option>
                         </select>
                     </div>
                     <div class="flex justify-between items-center bg-slate-800 p-1.5 rounded border border-slate-700">
                         <span class="text-[10px] font-bold text-green-400">Green Spider</span>
                         <select id="sel-green" onchange="updateSet('green', this.value)" class="bg-slate-900 text-[10px] text-white rounded border border-slate-600 px-1 py-0.5 outline-none font-bold">
-                            <option value="1">Set 1</option><option value="2">Set 2</option><option value="3">Set 3</option><option value="4">Set 4</option>
+                            <option value="1">Set 1</option><option value="2">Set 2</option><option value="3" selected>Set 3</option><option value="4">Set 4</option>
                         </select>
                     </div>
                     <div class="flex justify-between items-center bg-slate-800 p-1.5 rounded border border-slate-700">
                         <span class="text-[10px] font-bold text-yellow-400">Yellow Mandrake</span>
                         <select id="sel-yellow" onchange="updateSet('yellow', this.value)" class="bg-slate-900 text-[10px] text-white rounded border border-slate-600 px-1 py-0.5 outline-none font-bold">
-                            <option value="1">Set 1</option><option value="2">Set 2</option><option value="3">Set 3</option><option value="4">Set 4</option>
+                            <option value="1">Set 1</option><option value="2">Set 2</option><option value="3" selected>Set 3</option><option value="4">Set 4</option>
                         </select>
                     </div>
                     <div class="flex justify-between items-center bg-slate-800 p-1.5 rounded border border-slate-700 col-span-2 sm:col-span-1">
@@ -323,6 +323,20 @@
     </div>
 
     <!-- MODALS -->
+
+    <!-- Bonus Alert Modal -->
+    <div id="bonus-alert-modal" class="fixed inset-0 modal-bg z-[70] hidden flex items-center justify-center p-4">
+        <div class="bg-slate-800 border-2 border-emerald-500/50 rounded-2xl max-w-sm w-full p-6 text-center space-y-5 shadow-2xl relative overflow-hidden">
+            <div class="text-5xl animate-bounce">✨</div>
+            <div>
+                <h3 id="bonus-alert-title" class="font-black text-2xl text-emerald-400">Bonus!</h3>
+                <p id="bonus-alert-desc" class="text-slate-300 text-sm mt-2">Details here.</p>
+            </div>
+            <button onclick="dismissBonusModal()" class="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-sm rounded-xl transition-all active:scale-95 shadow-lg">
+                AWESOME
+            </button>
+        </div>
+    </div>
 
     <!-- Red Resolution Modal -->
     <div id="red-resolution-modal" class="fixed inset-0 modal-bg z-50 hidden flex items-center justify-center p-4">
@@ -607,6 +621,7 @@
         let pendingExplosionPlayer = null;
         let players = [createNewPlayerState("Player 1"), createNewPlayerState("Player 2")];
         let pendingCrowCandidates = [];
+        let pendingBonusCallback = null;
         
         let eligibleDiceRollers = [];
         let currentDiceRollerIndex = 0;
@@ -661,6 +676,22 @@
                 returnBtn.classList.add('hidden');
                 document.getElementById(modalId).classList.remove('hidden');
             };
+        }
+
+        function showBonusModal(title, desc, callback) {
+            document.getElementById('bonus-alert-title').innerText = title;
+            document.getElementById('bonus-alert-desc').innerText = desc;
+            pendingBonusCallback = callback;
+            document.getElementById('bonus-alert-modal').classList.remove('hidden');
+        }
+
+        function dismissBonusModal() {
+            document.getElementById('bonus-alert-modal').classList.add('hidden');
+            if (pendingBonusCallback) {
+                let cb = pendingBonusCallback;
+                pendingBonusCallback = null;
+                cb();
+            }
         }
 
         function startGame() {
@@ -1023,11 +1054,20 @@
                         logEvent(`🕷️ ${p.name} stopped with exactly 7 white! Green Spider (Set 3) jumped their last chip ${greenSum} extra spaces!`);
                         playSound('coin');
                         renderAll();
+                        p.green3Triggered = true;
+                        
+                        showBonusModal(`🕷️ Green Spider Bonus!`, `${p.name} stopped with exactly 7 white! Their last chip jumped ${greenSum} extra spaces!`, () => {
+                            continueTurnEnd(pIdx);
+                        });
+                        return; // Halt logic flow until the modal is dismissed
                     }
                     p.green3Triggered = true;
                 }
             }
+            continueTurnEnd(pIdx);
+        }
 
+        function continueTurnEnd(pIdx) {
             if (gameMode === '2p' && activePlayerIndex === 0 && !players[1].finished) {
                 activePlayerIndex = 1;
                 logEvent(`Turn passed to ${players[1].name}.`);
@@ -1316,8 +1356,16 @@
                 ctx.beginPath(); ctx.arc(pt.x, pt.y, 3, 0, Math.PI*2);
                 ctx.fillStyle = pt.color; ctx.globalAlpha = pt.life; ctx.fill(); ctx.globalAlpha = 1.0;
             });
+            
+            // Dynamic White Sum Indicator for Yellow Set 3
+            const yellowCount = p.drawnChips.filter(c => c.color === 'yellow').length;
+            let maxWhite = 7;
+            if (activeSets.yellow === 3) {
+                if (yellowCount >= 3) maxWhite = 9;
+                else if (yellowCount >= 1) maxWhite = 8;
+            }
 
-            document.getElementById(`${prefix}-white-sum`).innerText = `${p.whiteSum} / 7`;
+            document.getElementById(`${prefix}-white-sum`).innerText = `${p.whiteSum} / ${maxWhite}`;
             document.getElementById(`${prefix}-position`).innerText = `Space ${p.currentSpace}`;
             document.getElementById(`${prefix}-potion-status`).innerText = p.potionFull ? 'Ready' : 'Empty';
             document.getElementById(`${prefix}-coins-val`).innerText = (TRACK[p.currentSpace] || TRACK[33]).coins;
