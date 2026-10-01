@@ -32,12 +32,12 @@
 
     <!-- Version Badge -->
     <div class="fixed bottom-2 right-3 text-[10px] font-mono text-slate-500 pointer-events-none select-none z-30">
-        v1.1.0
+        v1.2.0 (Survival & Analytics)
     </div>
 
     <!-- PEEK BOARD RETURN BUTTON -->
     <button id="peek-return-btn" class="fixed top-6 left-1/2 transform -translate-x-1/2 z-[100] bg-indigo-600 hover:bg-indigo-500 text-white font-black text-sm px-6 py-3 rounded-full shadow-[0_0_25px_rgba(79,70,229,0.6)] hidden transition-all active:scale-95 border-2 border-indigo-400 flex items-center space-x-2">
-        <span class="text-lg">👁️️</span>
+        <span class="text-lg">👁</span>
         <span>RETURN TO DECISION</span>
     </button>
 
@@ -45,30 +45,42 @@
     <div id="setup-screen" class="w-full max-w-xl bg-slate-800 rounded-2xl border border-slate-700 p-6 shadow-2xl space-y-5 my-auto z-10 relative">
         <div class="text-center space-y-1">
             <h1 class="text-3xl sm:text-4xl font-extrabold text-amber-400 tracking-wide">The Quacks of Quedlinburg</h1>
-            <p class="text-slate-400 text-xs">9-Round Pass & Play Edition with Secret Turns & Bonus Die</p>
+            <p class="text-slate-400 text-xs">Pass & Play, AI Survival Guillotine & Post-Game Dashboard</p>
         </div>
 
         <div class="space-y-3">
             <div>
                 <label class="block text-xs font-semibold text-slate-300 mb-1.5">Game Mode</label>
-                <div class="grid grid-cols-2 gap-2">
-                    <button id="mode-1p" onclick="setMode('1p')" class="py-2.5 px-3 rounded-xl border-2 font-bold text-xs transition-all border-amber-500 bg-amber-500/10 text-amber-400">
-                        1 Player (Solo High Score)
+                <div class="grid grid-cols-3 gap-2">
+                    <button id="mode-1p" onclick="setMode('1p')" class="py-2.5 px-2 rounded-xl border-2 font-bold text-xs transition-all border-amber-500 bg-amber-500/10 text-amber-400">
+                        1P High Score
                     </button>
-                    <button id="mode-2p" onclick="setMode('2p')" class="py-2.5 px-3 rounded-xl border-2 font-bold text-xs transition-all border-slate-600 bg-slate-700/50 text-slate-300 hover:border-slate-500">
-                        2 Players (Secret Pass & Play)
+                    <button id="mode-2p" onclick="setMode('2p')" class="py-2.5 px-2 rounded-xl border-2 font-bold text-xs transition-all border-slate-600 bg-slate-700/50 text-slate-300 hover:border-slate-500">
+                        2P Secret Pass
+                    </button>
+                    <button id="mode-survival" onclick="setMode('survival')" class="py-2.5 px-2 rounded-xl border-2 font-bold text-xs transition-all border-slate-600 bg-slate-700/50 text-slate-300 hover:border-slate-500">
+                        💀 AI Survival
                     </button>
                 </div>
             </div>
 
+            <!-- Player Configuration -->
             <div id="player-names-container" class="space-y-2">
                 <div>
-                    <label class="block text-[11px] font-semibold text-slate-400 mb-0.5">Player 1 Name</label>
+                    <label class="block text-[11px] font-semibold text-slate-400 mb-0.5">Your Alchemist Name</label>
                     <input type="text" id="p1-name-input" value="Player 1" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-amber-500">
                 </div>
                 <div id="p2-name-group" class="hidden">
                     <label class="block text-[11px] font-semibold text-slate-400 mb-0.5">Player 2 Name</label>
                     <input type="text" id="p2-name-input" value="Player 2" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-amber-500">
+                </div>
+                <div id="ai-count-group" class="hidden space-y-1">
+                    <label class="block text-[11px] font-semibold text-slate-400">AI Opponents (Lowest VP eliminated after 9 rounds)</label>
+                    <select id="ai-count-select" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-amber-400 font-bold focus:outline-none focus:border-amber-500">
+                        <option value="3">3 AI Opponents (4 Players Total)</option>
+                        <option value="4" selected>4 AI Opponents (5 Players Total)</option>
+                        <option value="5">5 AI Opponents (6 Players Total)</option>
+                    </select>
                 </div>
             </div>
 
@@ -119,7 +131,7 @@
             </div>
 
             <button onclick="startGame()" class="w-full py-3.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-base rounded-xl shadow-lg transition-all active:scale-[0.98]">
-                START 9-ROUND GAME
+                START CAMPAIGN
             </button>
         </div>
     </div>
@@ -139,12 +151,13 @@
     </div>
 
     <!-- ACTIVE GAME INTERFACE -->
-    <div id="game-interface" class="w-full max-w-5xl space-y-4 hidden flex-col z-10 relative">
+    <div id="game-interface" class="w-full max-w-6xl space-y-4 hidden flex-col z-10 relative">
         <div class="bg-slate-800 rounded-xl p-3 border border-slate-700 flex justify-between items-center shadow-md">
             <div class="flex items-center space-x-2">
                 <span class="text-amber-400 font-extrabold text-lg">Quacks</span>
                 <button onclick="toggleAlmanacModal()" id="active-set-badge" class="bg-slate-900 hover:bg-slate-700 text-amber-400 text-xs px-2 py-0.5 rounded border border-amber-500/30 transition-colors cursor-pointer">Sets Active</button>
                 <span id="round-indicator" class="bg-emerald-500/20 text-emerald-400 text-xs font-bold px-2 py-0.5 rounded border border-emerald-500/30">Round 1 / 9</span>
+                <span id="survival-stage-badge" class="bg-red-500/20 text-red-400 text-xs font-bold px-2 py-0.5 rounded border border-red-500/30 hidden">Stage 1 (Guillotine)</span>
             </div>
             <div class="flex items-center space-x-2">
                 <button onclick="toggleAlmanacModal()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-bold py-1 px-2.5 rounded-lg border border-slate-600">Almanac</button>
@@ -158,185 +171,7 @@
         </div>
 
         <div id="boards-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <!-- Player 1 Board Card -->
-            <div id="p1-card" class="bg-slate-800 rounded-2xl p-4 border-2 border-amber-500/50 shadow-xl space-y-3 relative">
-                <div class="flex justify-between items-center border-b border-slate-700/60 pb-2">
-                    <div class="flex items-center space-x-2">
-                        <div class="w-3 h-3 rounded-full bg-amber-400"></div>
-                        <h2 id="p1-title" class="font-bold text-amber-300 text-base">Player 1</h2>
-                    </div>
-                    <div class="flex items-center space-x-2">
-                        <button onclick="openBagModal(0)" class="bg-slate-700 hover:bg-slate-600 text-cyan-300 text-[10px] font-bold py-1 px-2 rounded border border-cyan-500/30">🎒 Bag</button>
-                        <div class="text-xs font-semibold space-x-2">
-                            <span class="text-emerald-400">Coins: <strong id="p1-coins-val">0</strong></span>
-                            <span class="text-sky-400">VP: <strong id="p1-vp-val">0</strong></span>
-                            <span class="text-rose-400">Rubies: <strong id="p1-rubies-val">2</strong></span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="relative w-full aspect-square bg-slate-900 rounded-xl overflow-hidden border border-slate-700 flex items-center justify-center">
-                    <canvas id="p1-canvas" class="w-full h-full cursor-pointer"></canvas>
-                    <div id="p1-tooltip" class="absolute bottom-2 left-2 right-2 bg-slate-950/90 border border-slate-700 p-2 rounded-lg text-xs text-slate-200 pointer-events-none hidden shadow-lg text-center z-20">
-                        Hover space to inspect...
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-3 gap-2 text-center text-xs bg-slate-900/60 p-2 rounded-xl border border-slate-700/50">
-                    <div>
-                        <div class="text-slate-400">White Sum</div>
-                        <div id="p1-white-sum" class="font-bold text-slate-100 text-sm">0 / 7</div>
-                    </div>
-                    <div>
-                        <div class="text-slate-400">Position</div>
-                        <div id="p1-position" class="font-bold text-amber-400 text-sm">Space 0</div>
-                    </div>
-                    <div>
-                        <div class="text-slate-400">Potion</div>
-                        <div id="p1-potion-status" class="font-bold text-cyan-400 text-sm">Ready</div>
-                    </div>
-                </div>
-
-                <!-- Test Tube Track -->
-                <div class="bg-slate-900/60 p-2 rounded-xl border border-slate-700/50 space-y-1">
-                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex justify-between">
-                        <span>🧪 Test Tube (Vial) Tracker</span>
-                        <span id="p1-vial-level" class="text-fuchsia-400">Level 0 / 12</span>
-                    </div>
-                    <div class="flex overflow-x-auto hide-scroll gap-1 pb-1" id="p1-vial-track"></div>
-                </div>
-
-                <div class="bg-slate-900/80 rounded-xl p-2.5 border border-slate-700 space-y-1.5">
-                    <div class="flex justify-between items-center">
-                        <h3 class="text-[11px] font-bold text-amber-400 uppercase tracking-wider">Ingredients Placed</h3>
-                        <span id="p1-placed-count" class="text-[10px] text-slate-400">0 chips</span>
-                    </div>
-                    <div id="p1-placed-chips" class="flex flex-wrap gap-1.5 max-h-20 overflow-y-auto pr-1 text-xs">
-                        <span class="text-slate-500 text-[11px] italic">No chips drawn yet this round.</span>
-                    </div>
-                </div>
-
-                <!-- Set Aside Zone P1 -->
-                <div id="p1-aside-red-container" class="bg-slate-900/80 rounded-xl p-2.5 border border-red-500/40 space-y-1.5 hidden">
-                    <div class="flex justify-between items-center">
-                        <h3 class="text-[11px] font-bold text-red-400 uppercase tracking-wider">Set Aside (Red Toadstools)</h3>
-                    </div>
-                    <div id="p1-aside-red" class="flex flex-wrap gap-1.5 max-h-20 overflow-y-auto pr-1 text-xs"></div>
-                </div>
-
-                <div id="p1-controls" class="space-y-2">
-                    <div class="bg-slate-900 rounded-lg p-2 border border-slate-700">
-                        <div class="flex justify-between text-[10px] font-bold mb-1">
-                            <span class="text-slate-400">Odds of Exploding <span id="p1-bust-shield"></span></span>
-                            <span id="p1-bust-text" class="text-emerald-400">0%</span>
-                        </div>
-                        <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                            <div id="p1-bust-bar" class="bg-emerald-500 h-full transition-all duration-300" style="width: 0%"></div>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <button id="p1-draw-btn" onclick="drawChip(0)" class="py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm rounded-xl shadow-lg transition-all active:scale-[0.98]">
-                            DRAW CHIP
-                        </button>
-                        <button id="p1-stop-btn" onclick="stopTurn(0)" class="py-3 bg-amber-600 hover:bg-amber-500 text-white font-extrabold text-sm rounded-xl shadow-lg transition-all active:scale-[0.98]">
-                            STOP DRAWING
-                        </button>
-                    </div>
-                    <button id="p1-potion-btn" onclick="usePotion(0)" class="w-full py-2 bg-slate-700 hover:bg-slate-600 text-cyan-300 font-bold text-xs rounded-lg border border-cyan-500/30 flex items-center justify-center space-x-1 transition-all active:scale-[0.98]">
-                        <span>Drink Potion (Return Last Chip)</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Player 2 Board Card -->
-            <div id="p2-card" class="bg-slate-800 rounded-2xl p-4 border border-slate-700 shadow-xl space-y-3 relative hidden">
-                <div class="flex justify-between items-center border-b border-slate-700/60 pb-2">
-                    <div class="flex items-center space-x-2">
-                        <div class="w-3 h-3 rounded-full bg-slate-500"></div>
-                        <h2 id="p2-title" class="font-bold text-slate-300 text-base">Player 2</h2>
-                    </div>
-                    <div class="flex items-center space-x-2">
-                        <button onclick="openBagModal(1)" class="bg-slate-700 hover:bg-slate-600 text-cyan-300 text-[10px] font-bold py-1 px-2 rounded border border-cyan-500/30">🎒 Bag</button>
-                        <div class="text-xs font-semibold space-x-2">
-                            <span class="text-emerald-400">Coins: <strong id="p2-coins-val">0</strong></span>
-                            <span class="text-sky-400">VP: <strong id="p2-vp-val">0</strong></span>
-                            <span class="text-rose-400">Rubies: <strong id="p2-rubies-val">2</strong></span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="relative w-full aspect-square bg-slate-900 rounded-xl overflow-hidden border border-slate-700 flex items-center justify-center">
-                    <canvas id="p2-canvas" class="w-full h-full cursor-pointer"></canvas>
-                    <div id="p2-tooltip" class="absolute bottom-2 left-2 right-2 bg-slate-950/90 border border-slate-700 p-2 rounded-lg text-xs text-slate-200 pointer-events-none hidden shadow-lg text-center z-20">
-                        Hover space to inspect...
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-3 gap-2 text-center text-xs bg-slate-900/60 p-2 rounded-xl border border-slate-700/50">
-                    <div>
-                        <div class="text-slate-400">White Sum</div>
-                        <div id="p2-white-sum" class="font-bold text-slate-100 text-sm">0 / 7</div>
-                    </div>
-                    <div>
-                        <div class="text-slate-400">Position</div>
-                        <div id="p2-position" class="font-bold text-amber-400 text-sm">Space 0</div>
-                    </div>
-                    <div>
-                        <div class="text-slate-400">Potion</div>
-                        <div id="p2-potion-status" class="font-bold text-cyan-400 text-sm">Ready</div>
-                    </div>
-                </div>
-
-                <!-- Test Tube Track -->
-                <div class="bg-slate-900/60 p-2 rounded-xl border border-slate-700/50 space-y-1">
-                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex justify-between">
-                        <span>🧪 Test Tube (Vial) Tracker</span>
-                        <span id="p2-vial-level" class="text-fuchsia-400">Level 0 / 12</span>
-                    </div>
-                    <div class="flex overflow-x-auto hide-scroll gap-1 pb-1" id="p2-vial-track"></div>
-                </div>
-
-                <div class="bg-slate-900/80 rounded-xl p-2.5 border border-slate-700 space-y-1.5">
-                    <div class="flex justify-between items-center">
-                        <h3 class="text-[11px] font-bold text-amber-400 uppercase tracking-wider">Ingredients Placed</h3>
-                        <span id="p2-placed-count" class="text-[10px] text-slate-400">0 chips</span>
-                    </div>
-                    <div id="p2-placed-chips" class="flex flex-wrap gap-1.5 max-h-20 overflow-y-auto pr-1 text-xs">
-                        <span class="text-slate-500 text-[11px] italic">No chips drawn yet this round.</span>
-                    </div>
-                </div>
-
-                <!-- Set Aside Zone P2 -->
-                <div id="p2-aside-red-container" class="bg-slate-900/80 rounded-xl p-2.5 border border-red-500/40 space-y-1.5 hidden">
-                    <div class="flex justify-between items-center">
-                        <h3 class="text-[11px] font-bold text-red-400 uppercase tracking-wider">Set Aside (Red Toadstools)</h3>
-                    </div>
-                    <div id="p2-aside-red" class="flex flex-wrap gap-1.5 max-h-20 overflow-y-auto pr-1 text-xs"></div>
-                </div>
-
-                <div id="p2-controls" class="space-y-2 opacity-50 pointer-events-none">
-                    <div class="bg-slate-900 rounded-lg p-2 border border-slate-700">
-                        <div class="flex justify-between text-[10px] font-bold mb-1">
-                            <span class="text-slate-400">Odds of Exploding <span id="p2-bust-shield"></span></span>
-                            <span id="p2-bust-text" class="text-emerald-400">0%</span>
-                        </div>
-                        <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                            <div id="p2-bust-bar" class="bg-emerald-500 h-full transition-all duration-300" style="width: 0%"></div>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <button id="p2-draw-btn" onclick="drawChip(1)" class="py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm rounded-xl shadow-lg transition-all active:scale-[0.98]">
-                            DRAW CHIP
-                        </button>
-                        <button id="p2-stop-btn" onclick="stopTurn(1)" class="py-3 bg-amber-600 hover:bg-amber-500 text-white font-extrabold text-sm rounded-xl shadow-lg transition-all active:scale-[0.98]">
-                            STOP DRAWING
-                        </button>
-                    </div>
-                    <button id="p2-potion-btn" onclick="usePotion(1)" class="w-full py-2 bg-slate-700 hover:bg-slate-600 text-cyan-300 font-bold text-xs rounded-lg border border-cyan-500/30 flex items-center justify-center space-x-1 transition-all active:scale-[0.98]">
-                        <span>Drink Potion (Return Last Chip)</span>
-                    </button>
-                </div>
-            </div>
+            <!-- Dynamic Player Board Cards injected via JS -->
         </div>
 
         <div class="bg-slate-800 rounded-xl p-3 border border-slate-700 space-y-1">
@@ -380,9 +215,7 @@
                 <p class="text-slate-300 text-xs mt-1">Choose which chip to add to your bag.</p>
             </div>
             
-            <div id="vial-chip-options" class="grid grid-cols-2 gap-3 pt-2">
-                <!-- Dynamically populated -->
-            </div>
+            <div id="vial-chip-options" class="grid grid-cols-2 gap-3 pt-2"></div>
         </div>
     </div>
 
@@ -405,7 +238,7 @@
         <div class="bg-slate-800 border-2 border-red-500/50 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl relative">
             <div class="flex justify-between items-start border-b border-slate-700/50 pb-2">
                 <h3 class="font-black text-xl text-red-400">Set Aside Red Toadstools</h3>
-                <button onclick="peekBoard('red-resolution-modal')" class="bg-slate-700 hover:bg-slate-600 text-xl px-2 py-1 rounded transition-colors" title="View Board">👁️️</button>
+                <button onclick="peekBoard('red-resolution-modal')" class="bg-slate-700 hover:bg-slate-600 text-xl px-2 py-1 rounded transition-colors" title="View Board">👁</button>
             </div>
             <p class="text-slate-300 text-xs text-center">You stopped drawing. Choose what to do with your set-aside Red chips before moving on.</p>
             <div id="red-res-chips" class="space-y-2 max-h-48 overflow-y-auto"></div>
@@ -505,9 +338,7 @@
                         <h4 class="font-bold text-xs text-rose-400 uppercase tracking-wide">Ruby Purchases</h4>
                         <span id="market-rubies-left" class="text-xs font-bold text-rose-400 bg-rose-500/20 px-2 py-0.5 rounded border border-rose-500/30">Rubies: 2</span>
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2" id="ruby-purchases-container">
-                        <!-- Buttons are dynamically inserted here -->
-                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2" id="ruby-purchases-container"></div>
                 </div>
 
                 <div class="space-y-2">
@@ -525,13 +356,62 @@
         </div>
     </div>
 
-    <div id="game-over-modal" class="fixed inset-0 modal-bg z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 text-center space-y-5 shadow-2xl">
-            <h2 class="text-3xl font-black text-amber-400">Campaign Completed!</h2>
-            <p class="text-slate-300 text-xs">9 Rounds Finished</p>
-            <div id="game-over-stats" class="bg-slate-900 p-4 rounded-xl border border-slate-700 space-y-3"></div>
-            <button onclick="location.reload()" class="w-full py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm rounded-xl transition-all active:scale-95">
-                PLAY AGAIN
+    <!-- SURVIVAL ELIMINATION MODAL -->
+    <div id="survival-elimination-modal" class="fixed inset-0 modal-bg z-[100] hidden flex items-center justify-center p-4">
+        <div class="bg-slate-800 border-2 border-red-500/60 rounded-2xl max-w-md w-full p-6 text-center space-y-5 shadow-2xl relative overflow-hidden">
+            <div class="text-5xl animate-bounce">🪓</div>
+            <div>
+                <h3 class="font-black text-2xl text-red-400">Guillotine Elimination!</h3>
+                <p id="elimination-desc" class="text-slate-300 text-xs mt-2">After 9 rounds, the lowest scoring alchemist has been eliminated from the tournament.</p>
+            </div>
+            
+            <div id="eliminated-player-card" class="bg-slate-900 border border-red-500/30 p-4 rounded-xl text-center space-y-1">
+                <div id="eliminated-name" class="font-extrabold text-lg text-red-400">Player Name</div>
+                <div id="eliminated-vp" class="text-xs text-slate-400">Final VP: 0</div>
+            </div>
+
+            <button onclick="continueSurvivalStage()" class="w-full py-3.5 bg-red-500 hover:bg-red-400 text-slate-950 font-black text-sm rounded-xl transition-all active:scale-95 shadow-lg">
+                ADVANCE TO NEXT STAGE
+            </button>
+        </div>
+    </div>
+
+    <!-- GAME OVER / POST-GAME DASHBOARD MODAL -->
+    <div id="game-over-modal" class="fixed inset-0 modal-bg z-[100] hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-3xl w-full p-6 text-center space-y-5 shadow-2xl my-auto">
+            <div class="space-y-1">
+                <h2 id="game-over-title" class="text-3xl font-black text-amber-400">Campaign Completed!</h2>
+                <p id="game-over-subtitle" class="text-slate-400 text-xs">Post-Game Analytical Dashboard & Performance Analysis</p>
+            </div>
+
+            <div id="game-over-winner-banner" class="bg-gradient-to-r from-amber-500/20 via-amber-500/10 to-amber-500/20 border border-amber-500/40 p-4 rounded-xl text-center space-y-1">
+                <div class="text-xs font-bold text-amber-400 uppercase tracking-widest">Tournament Champion</div>
+                <div id="champion-name" class="text-2xl font-extrabold text-white">Player 1</div>
+                <div id="champion-vp" class="text-xs text-slate-300">Total Score: 0 VP</div>
+            </div>
+
+            <!-- Dashboard Analytics Table -->
+            <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 space-y-3 text-left">
+                <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider">📊 Player Analytics & Luck Variance Dashboard</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs text-slate-300">
+                        <thead class="bg-slate-800 text-slate-400 border-b border-slate-700">
+                            <tr>
+                                <th class="p-2 text-left">Player</th>
+                                <th class="p-2 text-center">Score</th>
+                                <th class="p-2 text-center">Bust Rate</th>
+                                <th class="p-2 text-center">Luck Rating</th>
+                                <th class="p-2 text-center">Chips Bought</th>
+                                <th class="p-2 text-center">Rubies Spent</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dashboard-stats-tbody" class="divide-y divide-slate-800"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <button onclick="location.reload()" class="w-full py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm rounded-xl transition-all active:scale-95 shadow-lg">
+                RETURN TO LOBBY
             </button>
         </div>
     </div>
@@ -594,38 +474,10 @@
         let activeFortuneCard = null;
 
         const SET_ALMANAC = {
-            1: {
-                orange: "Solid pot filler with no special ability.",
-                red: "+1 space if 1-2 Pumpkins in pot; +2 extra spaces if 3+ Pumpkins.",
-                blue: "Draw candidate chips equal to value, choose 1 to place or discard.",
-                green: "Evaluated End-of-Round. Earn 1 Ruby if a green chip is the very last or next-to-last chip placed.",
-                yellow: "Doubled value if placed immediately after a White chip.",
-                purple: "Evaluated End-of-Round. +1 space if opponent has more Ghost chips in pot."
-            },
-            2: {
-                orange: "Standard value.",
-                red: "When drawn, set aside. After you stop/explode, place in pot, return to bag, or save for future rounds.",
-                blue: "If potion explodes on next [value] chips drawn, turn ends but player safely receives BOTH VP and Coins. (No die roll).",
-                green: "If placed last/next-to-last: Gr1 = +Orange 1; Gr2 = Choice of +Blue 1 or +Red 1; Gr4 = Choice of +Yellow 1 or +Purple 1.",
-                yellow: "The very NEXT drawn chip after this Mandrake is moved twice as far.",
-                purple: "End-of-round VP scaling based on total purple count."
-            },
-            3: {
-                orange: "Standard value.",
-                red: "If drawn directly after a White chip, add the White chip's value to this chip's movement.",
-                blue: "If placed on a Ruby space, immediately receive 1 Ruby.",
-                green: "If you stop before exploding and your white sum is exactly 7, your last chip jumps forward by the total value of all green chips in your pot.",
-                yellow: "Increases white explosion threshold to 8 (with 1+ yellow in pot) or 9 (with 3+ yellow in pot).",
-                purple: "End-of-round VP based on board zone index (10+, 20+, 30+)."
-            },
-            4: {
-                orange: "Standard value.",
-                red: "If at least 1 red chip is in pot, subsequent White 1-chips move 2 spaces instead of 1 (but still count as 1 for exploding).",
-                blue: "If placed on a Ruby space, immediately receive Victory Points equal to the chip's value.",
-                green: "In shop phase, you may pay 1 Ruby to move Droplet +1 space for each green chip placed last or next-to-last.",
-                yellow: "Bonus movement scales with total yellow count in pot.",
-                purple: "Instant +1 Ruby if placed on an even-numbered space index."
-            }
+            1: { orange: "Solid pot filler.", red: "+1-2 spaces based on Pumpkins.", blue: "Draw & pick candidate chips.", green: "Ruby if last/next-to-last.", yellow: "Doubled after White chip.", purple: "Bonus if opponent has more." },
+            2: { orange: "Standard.", red: "Set aside drawn red chips for later decision.", blue: "Protect against explosion penalties.", green: "Grants free chips depending on value.", yellow: "Doubles NEXT drawn chip.", purple: "VP scaling." },
+            3: { orange: "Standard.", red: "Moves extra spaces equal to preceding White chip.", blue: "Ruby on Ruby space.", green: "Jump bonus if white sum equals exactly 7.", yellow: "Increases white explosion limit to 8 or 9.", purple: "Zone VP." },
+            4: { orange: "Standard.", red: "White 1 chips move 2 spaces if Red in pot.", blue: "VP on Ruby space.", green: "Ruby for Droplet advance.", yellow: "Scales with total Yellow.", purple: "Ruby on even spaces." }
         };
 
         let activeSets = { red: 1, blue: 1, green: 1, yellow: 1, purple: 1 };
@@ -684,6 +536,7 @@
 
         let gameMode = '1p';
         let currentRound = 1;
+        let survivalStage = 1;
         let activePlayerIndex = 0;
         let currentShopperIndex = 0;
         let currentTurnCoins = 0;
@@ -693,11 +546,10 @@
         let pendingCrowCandidates = [];
         let pendingBonusCallback = null;
         
-        // Droplet Interception State
         let pendingDropletPlayer = null;
         let pendingDropletContext = null;
         
-        let players = [createNewPlayerState("Player 1"), createNewPlayerState("Player 2")];
+        let players = [];
         
         let eligibleDiceRollers = [];
         let currentDiceRollerIndex = 0;
@@ -711,12 +563,21 @@
             { id: 'pumpkin', text: '+1 Pumpkin (to bag)', icon: '🎃', vp: 0, ruby: 0, droplet: 0, pumpkin: 1 }
         ];
 
-        function createNewPlayerState(name) {
+        function createNewPlayerState(name, isAI = false) {
             return {
-                name: name, droplet: 0, testTubeLevel: 0, ratTails: 0, potionFull: true, vp: 0, rubies: 2, whiteSum: 0,
+                name: name, isAI: isAI, isEliminated: false,
+                droplet: 0, testTubeLevel: 0, ratTails: 0, potionFull: true, vp: 0, rubies: 2, whiteSum: 0,
                 currentSpace: 0, exploded: false, explosionChoice: null, finished: false, drawnChips: [],
                 greenSpiderUses: 0, blueSafetyTokens: 0, explodedProtected: false, 
                 asideRedChips: [], pendingGreenRewards: [], green3Triggered: false,
+                // Stats tracking for dashboard
+                stats: {
+                    totalDraws: 0,
+                    bustCount: 0,
+                    expectedBustAccumulator: 0,
+                    chipsBought: 0,
+                    rubiesSpent: 0
+                },
                 bag: [
                     { color: 'white', val: 1, name: 'White 1' }, { color: 'white', val: 1, name: 'White 1' },
                     { color: 'white', val: 1, name: 'White 1' }, { color: 'white', val: 2, name: 'White 2' },
@@ -728,9 +589,12 @@
 
         function setMode(mode) {
             gameMode = mode;
-            document.getElementById('mode-1p').className = mode === '1p' ? 'py-2.5 px-3 rounded-xl border-2 font-bold text-xs transition-all border-amber-500 bg-amber-500/10 text-amber-400' : 'py-2.5 px-3 rounded-xl border-2 font-bold text-xs transition-all border-slate-600 bg-slate-700/50 text-slate-300 hover:border-slate-500';
-            document.getElementById('mode-2p').className = mode === '2p' ? 'py-2.5 px-3 rounded-xl border-2 font-bold text-xs transition-all border-amber-500 bg-amber-500/10 text-amber-400' : 'py-2.5 px-3 rounded-xl border-2 font-bold text-xs transition-all border-slate-600 bg-slate-700/50 text-slate-300 hover:border-slate-500';
-            document.getElementById('p2-name-group').classList.toggle('hidden', mode === '1p');
+            document.getElementById('mode-1p').className = mode === '1p' ? 'py-2.5 px-2 rounded-xl border-2 font-bold text-xs transition-all border-amber-500 bg-amber-500/10 text-amber-400' : 'py-2.5 px-2 rounded-xl border-2 font-bold text-xs transition-all border-slate-600 bg-slate-700/50 text-slate-300 hover:border-slate-500';
+            document.getElementById('mode-2p').className = mode === '2p' ? 'py-2.5 px-2 rounded-xl border-2 font-bold text-xs transition-all border-amber-500 bg-amber-500/10 text-amber-400' : 'py-2.5 px-2 rounded-xl border-2 font-bold text-xs transition-all border-slate-600 bg-slate-700/50 text-slate-300 hover:border-slate-500';
+            document.getElementById('mode-survival').className = mode === 'survival' ? 'py-2.5 px-2 rounded-xl border-2 font-bold text-xs transition-all border-red-500 bg-red-500/10 text-red-400' : 'py-2.5 px-2 rounded-xl border-2 font-bold text-xs transition-all border-slate-600 bg-slate-700/50 text-slate-300 hover:border-slate-500';
+
+            document.getElementById('p2-name-group').classList.toggle('hidden', mode !== '2p');
+            document.getElementById('ai-count-group').classList.toggle('hidden', mode !== 'survival');
         }
 
         function setAll(val) {
@@ -772,20 +636,128 @@
 
         function startGame() {
             initAudio();
-            players[0].name = document.getElementById('p1-name-input').value || "Player 1";
-            players[1].name = document.getElementById('p2-name-input').value || "Player 2";
-            document.getElementById('p2-card').classList.toggle('hidden', gameMode === '1p');
+            const p1Name = document.getElementById('p1-name-input').value || "Player 1";
+            players = [];
+            players.push(createNewPlayerState(p1Name, false));
+
+            if (gameMode === '2p') {
+                const p2Name = document.getElementById('p2-name-input').value || "Player 2";
+                players.push(createNewPlayerState(p2Name, false));
+            } else if (gameMode === 'survival') {
+                const aiCount = parseInt(document.getElementById('ai-count-select').value);
+                const aiNames = ["Alchemist Bot", "Brewmaster Bot", "Potion Master", "Cauldron AI", "Quack-Bot"];
+                for(let i = 0; i < aiCount; i++) {
+                    players.push(createNewPlayerState(aiNames[i], true));
+                }
+            }
+
+            document.getElementById('survival-stage-badge').classList.toggle('hidden', gameMode !== 'survival');
             document.getElementById('setup-screen').classList.add('hidden');
             document.getElementById('game-interface').classList.remove('hidden');
             document.getElementById('game-interface').classList.add('flex');
 
+            buildPlayerBoardsDom();
             initRoundState();
             renderAll();
-            logEvent(`Game started! Round 1 begins.`);
+            logEvent(`Campaign started! Round 1 begins.`);
             requestAnimationFrame(animate);
-            
-            setupBoardInspector(0);
-            if (gameMode === '2p') setupBoardInspector(1);
+        }
+
+        function buildPlayerBoardsDom() {
+            const container = document.getElementById('boards-container');
+            container.innerHTML = players.map((p, idx) => `
+                <div id="p${idx}-card" class="bg-slate-800 rounded-2xl p-4 border ${idx === 0 ? 'border-2 border-amber-500/50' : 'border-slate-700'} shadow-xl space-y-3 relative ${p.isEliminated ? 'opacity-40 grayscale pointer-events-none' : ''}">
+                    <div class="flex justify-between items-center border-b border-slate-700/60 pb-2">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-3 h-3 rounded-full ${p.isAI ? 'bg-fuchsia-400' : (idx===0?'bg-amber-400':'bg-sky-400')}"></div>
+                            <h2 class="font-bold ${idx===0?'text-amber-300':'text-slate-300'} text-base">${p.name} ${p.isAI ? '🤖' : ''}</h2>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="openBagModal(${idx})" class="bg-slate-700 hover:bg-slate-600 text-cyan-300 text-[10px] font-bold py-1 px-2 rounded border border-cyan-500/30">🎒 Bag</button>
+                            <div class="text-xs font-semibold space-x-2">
+                                <span class="text-emerald-400">Coins: <strong id="p${idx}-coins-val">0</strong></span>
+                                <span class="text-sky-400">VP: <strong id="p${idx}-vp-val">0</strong></span>
+                                <span class="text-rose-400">Rubies: <strong id="p${idx}-rubies-val">2</strong></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="relative w-full aspect-square bg-slate-900 rounded-xl overflow-hidden border border-slate-700 flex items-center justify-center">
+                        <canvas id="p${idx}-canvas" class="w-full h-full cursor-pointer"></canvas>
+                        <div id="p${idx}-tooltip" class="absolute bottom-2 left-2 right-2 bg-slate-950/90 border border-slate-700 p-2 rounded-lg text-xs text-slate-200 pointer-events-none hidden shadow-lg text-center z-20">
+                            Hover space to inspect...
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-2 text-center text-xs bg-slate-900/60 p-2 rounded-xl border border-slate-700/50">
+                        <div>
+                            <div class="text-slate-400">White Sum</div>
+                            <div id="p${idx}-white-sum" class="font-bold text-slate-100 text-sm">0 / 7</div>
+                        </div>
+                        <div>
+                            <div class="text-slate-400">Position</div>
+                            <div id="p${idx}-position" class="font-bold text-amber-400 text-sm">Space 0</div>
+                        </div>
+                        <div>
+                            <div class="text-slate-400">Potion</div>
+                            <div id="p${idx}-potion-status" class="font-bold text-cyan-400 text-sm">Ready</div>
+                        </div>
+                    </div>
+
+                    <!-- Test Tube Track -->
+                    <div class="bg-slate-900/60 p-2 rounded-xl border border-slate-700/50 space-y-1">
+                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex justify-between">
+                            <span>🧪 Test Tube (Vial) Tracker</span>
+                            <span id="p${idx}-vial-level" class="text-fuchsia-400">Level 0 / 12</span>
+                        </div>
+                        <div class="flex overflow-x-auto hide-scroll gap-1 pb-1" id="p${idx}-vial-track"></div>
+                    </div>
+
+                    <div class="bg-slate-900/80 rounded-xl p-2.5 border border-slate-700 space-y-1.5">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-[11px] font-bold text-amber-400 uppercase tracking-wider">Ingredients Placed</h3>
+                            <span id="p${idx}-placed-count" class="text-[10px] text-slate-400">0 chips</span>
+                        </div>
+                        <div id="p${idx}-placed-chips" class="flex flex-wrap gap-1.5 max-h-20 overflow-y-auto pr-1 text-xs">
+                            <span class="text-slate-500 text-[11px] italic">No chips drawn yet.</span>
+                        </div>
+                    </div>
+
+                    <div id="p${idx}-aside-red-container" class="bg-slate-900/80 rounded-xl p-2.5 border border-red-500/40 space-y-1.5 hidden">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-[11px] font-bold text-red-400 uppercase tracking-wider">Set Aside (Red Toadstools)</h3>
+                        </div>
+                        <div id="p${idx}-aside-red" class="flex flex-wrap gap-1.5 max-h-20 overflow-y-auto pr-1 text-xs"></div>
+                    </div>
+
+                    <div id="p${idx}-controls" class="space-y-2">
+                        <div class="bg-slate-900 rounded-lg p-2 border border-slate-700">
+                            <div class="flex justify-between text-[10px] font-bold mb-1">
+                                <span class="text-slate-400">Odds of Exploding <span id="p${idx}-bust-shield"></span></span>
+                                <span id="p${idx}-bust-text" class="text-emerald-400">0%</span>
+                            </div>
+                            <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                                <div id="p${idx}-bust-bar" class="bg-emerald-500 h-full transition-all duration-300" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        ${!p.isAI ? `
+                        <div class="grid grid-cols-2 gap-2">
+                            <button id="p${idx}-draw-btn" onclick="drawChip(${idx})" class="py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm rounded-xl shadow-lg transition-all active:scale-[0.98]">
+                                DRAW CHIP
+                            </button>
+                            <button id="p${idx}-stop-btn" onclick="stopTurn(${idx})" class="py-3 bg-amber-600 hover:bg-amber-500 text-white font-extrabold text-sm rounded-xl shadow-lg transition-all active:scale-[0.98]">
+                                STOP DRAWING
+                            </button>
+                        </div>
+                        <button id="p${idx}-potion-btn" onclick="usePotion(${idx})" class="w-full py-2 bg-slate-700 hover:bg-slate-600 text-cyan-300 font-bold text-xs rounded-lg border border-cyan-500/30 flex items-center justify-center space-x-1 transition-all active:scale-[0.98]">
+                            <span>Drink Potion (Return Last Chip)</span>
+                        </button>
+                        ` : `<div class="p-3 bg-slate-900 border border-slate-700 rounded-xl text-center text-xs text-fuchsia-400 font-bold">🤖 Automated AI Player</div>`}
+                    </div>
+                </div>
+            `).join('');
+
+            players.forEach((_, idx) => setupBoardInspector(idx));
         }
 
         function initRoundState() {
@@ -800,23 +772,25 @@
                 logEvent(`🔮 Fortune Teller Card Drawn: ${activeFortuneCard.title}`);
 
                 if (activeFortuneCard.id === 'rubies') {
-                    players.forEach(p => p.rubies += 1);
+                    players.forEach(p => { if(!p.isEliminated) p.rubies += 1; });
                 }
             }
             
             if (currentRound === 6) {
                 players.forEach(p => {
-                    p.bag.push({ color: 'white', val: 1, name: 'White 1' });
+                    if(!p.isEliminated) p.bag.push({ color: 'white', val: 1, name: 'White 1' });
                 });
                 logEvent(`⚪ ROUND 6 BONUS: Added 1 extra White 1-chip to everyone's bag!`);
             }
 
-            let maxVP = Math.max(...players.map(p => p.vp));
+            let activePlayers = players.filter(p => !p.isEliminated);
+            let maxVP = Math.max(...activePlayers.map(p => p.vp));
 
             players.forEach(p => {
+                if (p.isEliminated) return;
                 p.drawnChips = []; p.whiteSum = 0;
                 
-                if (gameMode === '2p' && currentRound >= 2) {
+                if (players.length > 1 && currentRound >= 2) {
                     p.ratTails = Math.floor((maxVP - p.vp) / 2);
                 } else {
                     p.ratTails = 0;
@@ -824,11 +798,8 @@
                 
                 p.currentSpace = p.droplet + p.ratTails;
                 p.exploded = false; p.finished = false; p.explosionChoice = null;
-                p.greenSpiderUses = 0; 
-                p.blueSafetyTokens = 0;
-                p.explodedProtected = false;
-                p.pendingGreenRewards = [];
-                p.green3Triggered = false;
+                p.greenSpiderUses = 0; p.blueSafetyTokens = 0; p.explodedProtected = false;
+                p.pendingGreenRewards = []; p.green3Triggered = false;
 
                 if (activeFortuneCard && activeFortuneCard.id === 'feast') {
                     const whiteChip = { color: 'white', val: 1, name: 'White 1' };
@@ -838,21 +809,74 @@
                 }
             });
 
-            if (gameMode === '2p' && currentRound >= 2) {
-                players.forEach(p => {
-                    if (p.ratTails > 0) {
-                        logEvent(`🐀 Rat Tail Catch-up: ${p.name} places their rat ${p.ratTails} spaces ahead of their droplet.`);
-                    }
-                });
-            }
-
-            activePlayerIndex = 0;
+            activePlayerIndex = players.findIndex(p => !p.isEliminated);
             currentTurnPurchases = [];
             
-            if (gameMode === '2p') {
+            if (gameMode === '2p' && activePlayerIndex === 0) {
                 showPrivacyInterceptor(0);
             } else {
                 updateControlsState();
+            }
+
+            // Run active AI turns automatically
+            processAITurns();
+        }
+
+        function processAITurns() {
+            players.forEach((p, idx) => {
+                if (p.isAI && !p.isEliminated && !p.finished) {
+                    runAITurn(idx);
+                }
+            });
+        }
+
+        function runAITurn(pIdx) {
+            const p = players[pIdx];
+            while(!p.finished && !p.exploded) {
+                let available = getUndrawnBag(p);
+                if (available.length === 0) {
+                    p.finished = true;
+                    break;
+                }
+
+                let yellowCount = p.drawnChips.filter(c => c.color === 'yellow').length;
+                let maxWhite = 7;
+                if (activeSets.yellow === 3) {
+                    if (yellowCount >= 3) maxWhite = 9;
+                    else if (yellowCount >= 1) maxWhite = 8;
+                }
+                let safeRemaining = maxWhite - p.whiteSum;
+                let bustChips = available.filter(c => c.color === 'white' && c.val > safeRemaining).length;
+                let bustOdds = (bustChips / available.length) * 100;
+
+                // Track expected bust odds for luck metric
+                p.stats.expectedBustAccumulator += (bustOdds / 100);
+
+                // AI Risk Tolerance (Stops around ~35% bust chance)
+                if (bustOdds > 35 && p.whiteSum >= 5) {
+                    p.finished = true;
+                    logEvent(`🤖 ${p.name} stopped drawing at Space ${p.currentSpace} (${Math.round(bustOdds)}% bust risk).`);
+                    break;
+                }
+
+                const randIdx = Math.floor(Math.random() * available.length);
+                const chip = available[randIdx];
+                p.stats.totalDraws++;
+                executeChipPlacement(pIdx, chip);
+
+                // AI Potion Usage
+                if (p.exploded && p.potionFull) {
+                    const last = p.drawnChips[p.drawnChips.length - 1];
+                    if (last && last.color === 'white') {
+                        p.drawnChips.pop();
+                        p.whiteSum -= last.val;
+                        p.currentSpace = p.drawnChips.length > 0 ? p.drawnChips[p.drawnChips.length - 1].space : (p.droplet + p.ratTails);
+                        p.potionFull = false;
+                        p.exploded = false;
+                        p.finished = false;
+                        logEvent(`🤖 ${p.name} used their Potion to save their pot!`);
+                    }
+                }
             }
         }
 
@@ -877,6 +901,7 @@
                 logEvent(`${p.name}'s bag is empty! Forced to stop.`);
                 stopTurn(pIdx); return;
             }
+            p.stats.totalDraws++;
             const randIdx = Math.floor(Math.random() * available.length);
             executeChipPlacement(pIdx, available[randIdx]);
         }
@@ -884,7 +909,6 @@
         function executeChipPlacement(pIdx, chip) {
             const p = players[pIdx];
 
-            // Set 2 Red Toadstool - Sets aside instead of placing
             if (chip.color === 'red' && activeSets.red === 2) {
                 p.asideRedChips.push(chip);
                 playSound('draw');
@@ -903,10 +927,7 @@
             else if (chip.color === 'red' && activeSets.red === 3) {
                 if (p.drawnChips.length > 0) {
                     const lastChip = p.drawnChips[p.drawnChips.length - 1];
-                    if (lastChip.color === 'white') {
-                        moveDist += lastChip.val;
-                        logEvent(`🍄 ${p.name}'s Red Toadstool (Set 3) followed a White ${lastChip.val}, moving ${moveDist} spaces total!`);
-                    }
+                    if (lastChip.color === 'white') moveDist += lastChip.val;
                 }
             }
             else if (chip.color === 'yellow' && activeSets.yellow === 1) {
@@ -917,37 +938,22 @@
 
             if (activeSets.yellow === 2 && p.drawnChips.length > 0) {
                 const lastChip = p.drawnChips[p.drawnChips.length - 1];
-                if (lastChip.color === 'yellow') {
-                    moveDist *= 2;
-                    logEvent(`✨ ${p.name}'s Set 2 Yellow Mandrake doubled ${chip.name}'s movement distance to ${moveDist}!`);
-                }
+                if (lastChip.color === 'yellow') moveDist *= 2;
             }
 
             if (chip.color === 'white' && chip.val === 1 && activeSets.red === 4) {
-                if (p.drawnChips.some(c => c.color === 'red')) {
-                    moveDist = 2; 
-                    logEvent(`🔥 ${p.name}'s Red Toadstool (Set 4) boosted a White 1-chip to move 2 spaces!`);
-                }
+                if (p.drawnChips.some(c => c.color === 'red')) moveDist = 2; 
             }
 
             p.currentSpace = Math.min(33, p.currentSpace + moveDist);
-            
             const placedChip = { ...chip, space: p.currentSpace };
             p.drawnChips.push(placedChip);
 
-            // Immediate Blue abilities for Set 3 and Set 4
             if (chip.color === 'blue') {
                 const landedOnRuby = TRACK[p.currentSpace] ? TRACK[p.currentSpace].ruby : false;
                 if (landedOnRuby) {
-                    if (activeSets.blue === 3) {
-                        p.rubies += 1;
-                        logEvent(`💎 ${p.name}'s Blue Crow (Set 3) landed on a Ruby space! +1 Ruby immediately.`);
-                        playSound('coin'); 
-                    } else if (activeSets.blue === 4) {
-                        p.vp += chip.val;
-                        logEvent(`🌟 ${p.name}'s Blue Crow (Set 4) landed on a Ruby space! +${chip.val} VP immediately.`);
-                        playSound('coin');
-                    }
+                    if (activeSets.blue === 3) p.rubies += 1;
+                    else if (activeSets.blue === 4) p.vp += chip.val;
                 }
             }
             
@@ -958,9 +964,9 @@
             playSound('draw');
             const pt = getTrackCoords()[p.currentSpace] || getTrackCoords()[33];
             createParticles(pt.x, pt.y, getChipHex(chip.color));
-            logEvent(`${p.name} drew ${chip.name} -> Moved to Space ${p.currentSpace}`);
+            if(!p.isAI) logEvent(`${p.name} drew ${chip.name} -> Moved to Space ${p.currentSpace}`);
 
-            if (chip.color === 'blue' && activeSets.blue === 1) {
+            if (chip.color === 'blue' && activeSets.blue === 1 && !p.isAI) {
                 triggerCrowSkullAbility(pIdx, chip.val);
                 return;
             }
@@ -974,26 +980,18 @@
 
             if (p.whiteSum > maxWhite) {
                 p.exploded = true; p.finished = true;
+                p.stats.bustCount++;
                 playSound('explode');
                 createParticles(200, 200, '#ef4444', true);
 
-                if (wasProtectedByBlue) {
-                    p.explodedProtected = true;
-                    logEvent(`🛡️ BOOM! ${p.name}'s pot exploded, BUT the Blue Crow saved the rewards!`);
-                } else {
-                    logEvent(`💥 BOOM! ${p.name}'s pot exploded (${p.whiteSum} white)!`);
-                }
-                
+                if (wasProtectedByBlue) p.explodedProtected = true;
+                logEvent(`💥 BOOM! ${p.name}'s pot exploded (${p.whiteSum} white)!`);
                 initiateTurnEndPhase(pIdx);
                 return;
             }
             
             if (wasProtectedByBlue) p.blueSafetyTokens--;
-            
-            if (chip.color === 'blue' && activeSets.blue === 2) {
-                p.blueSafetyTokens = chip.val;
-                logEvent(`🛡️ Blue Crow set! Safe from explosion penalties for the next ${chip.val} chip(s).`);
-            }
+            if (chip.color === 'blue' && activeSets.blue === 2) p.blueSafetyTokens = chip.val;
 
             renderAll();
         }
@@ -1042,9 +1040,7 @@
                 p.currentSpace = p.droplet + p.ratTails;
             }
 
-            if (lastChip.color === 'blue' && activeSets.blue === 2) {
-                p.blueSafetyTokens = 0;
-            }
+            if (lastChip.color === 'blue' && activeSets.blue === 2) p.blueSafetyTokens = 0;
             
             p.potionFull = false;
             playSound('potion');
@@ -1061,7 +1057,7 @@
 
         function initiateTurnEndPhase(pIdx) {
             const p = players[pIdx];
-            if (p.asideRedChips && p.asideRedChips.length > 0) {
+            if (p.asideRedChips && p.asideRedChips.length > 0 && !p.isAI) {
                 renderRedResolutionModal(pIdx);
             } else {
                 handleTurnEnd(pIdx);
@@ -1083,7 +1079,6 @@
 
             const footer = document.getElementById('red-res-footer');
             footer.innerHTML = `<button onclick="finishRedResolution(${pIdx})" class="w-full py-3 bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold text-sm rounded-xl transition-all active:scale-95">Done / Keep Remaining Aside</button>`;
-            
             document.getElementById('red-resolution-modal').classList.remove('hidden');
         }
 
@@ -1095,19 +1090,13 @@
                 p.currentSpace = Math.min(33, p.currentSpace + chip.val);
                 p.drawnChips.push({ ...chip, space: p.currentSpace });
                 playSound('draw');
-                logEvent(`🍄 ${p.name} chose to place their set-aside ${chip.name} into the pot!`);
             } else if (action === 'bag') {
                 p.bag.push(chip);
-                logEvent(`🍄 ${p.name} returned their set-aside ${chip.name} to their bag.`);
             }
-            
             renderAll();
             
-            if (p.asideRedChips.length === 0) {
-                finishRedResolution(pIdx);
-            } else {
-                renderRedResolutionModal(pIdx);
-            }
+            if (p.asideRedChips.length === 0) finishRedResolution(pIdx);
+            else renderRedResolutionModal(pIdx);
         }
 
         function finishRedResolution(pIdx) {
@@ -1123,18 +1112,17 @@
                     const greenSum = p.drawnChips.filter(c => c.color === 'green').reduce((sum, c) => sum + c.val, 0);
                     if (greenSum > 0) {
                         p.currentSpace = Math.min(33, p.currentSpace + greenSum);
-                        if (p.drawnChips.length > 0) {
-                            p.drawnChips[p.drawnChips.length - 1].space = p.currentSpace;
-                        }
+                        if (p.drawnChips.length > 0) p.drawnChips[p.drawnChips.length - 1].space = p.currentSpace;
                         logEvent(`🕷️ ${p.name} stopped with exactly 7 white! Green Spider (Set 3) jumped their last chip ${greenSum} extra spaces!`);
                         playSound('coin');
                         renderAll();
                         p.green3Triggered = true;
-                        
-                        showBonusModal(`🕷️ Green Spider Bonus!`, `${p.name} stopped with exactly 7 white! Their last chip jumped ${greenSum} extra spaces!`, () => {
-                            continueTurnEnd(pIdx);
-                        });
-                        return;
+                        if (!p.isAI) {
+                            showBonusModal(`🕷️ Green Spider Bonus!`, `${p.name} stopped with exactly 7 white! Their last chip jumped ${greenSum} extra spaces!`, () => {
+                                continueTurnEnd(pIdx);
+                            });
+                            return;
+                        }
                     }
                     p.green3Triggered = true;
                 }
@@ -1143,11 +1131,11 @@
         }
 
         function continueTurnEnd(pIdx) {
+            let activeNonAI = players.filter(p => !p.isEliminated && !p.isAI);
             if (gameMode === '2p' && activePlayerIndex === 0 && !players[1].finished) {
                 activePlayerIndex = 1;
-                logEvent(`Turn passed to ${players[1].name}.`);
                 showPrivacyInterceptor(1);
-            } else if (players.every(pl => pl.finished || gameMode === '1p')) {
+            } else if (players.filter(p=>!p.isEliminated).every(pl => pl.finished || pl.isAI)) {
                 updateControlsState(); 
                 renderAll();
                 promptExplosionChoices();
@@ -1155,7 +1143,14 @@
         }
 
         function promptExplosionChoices() {
-            const bustedPlayerIdx = players.findIndex(p => p.exploded && !p.explosionChoice && !p.explodedProtected);
+            // AI auto chooses VP if exploded
+            players.forEach(p => {
+                if (p.isAI && p.exploded && !p.explosionChoice && !p.explodedProtected) {
+                    p.explosionChoice = 'vp';
+                }
+            });
+
+            const bustedPlayerIdx = players.findIndex(p => !p.isEliminated && p.exploded && !p.explosionChoice && !p.explodedProtected && !p.isAI);
             if (bustedPlayerIdx !== -1) {
                 pendingExplosionPlayer = bustedPlayerIdx;
                 const p = players[bustedPlayerIdx];
@@ -1182,19 +1177,15 @@
 
         function startDicePhase() {
             eligibleDiceRollers = [];
-            
-            if (gameMode === '1p') {
-                if (!players[0].exploded) eligibleDiceRollers.push(0);
-            } else {
-                let maxSpace = -1;
-                players.forEach(p => {
-                    if (!p.exploded && p.currentSpace > maxSpace) maxSpace = p.currentSpace;
+            let activePlayers = players.filter(p => !p.isEliminated);
+            let maxSpace = -1;
+            activePlayers.forEach(p => {
+                if (!p.exploded && p.currentSpace > maxSpace) maxSpace = p.currentSpace;
+            });
+            if (maxSpace > -1) {
+                players.forEach((p, idx) => {
+                    if (!p.isEliminated && !p.exploded && p.currentSpace === maxSpace) eligibleDiceRollers.push(idx);
                 });
-                if (maxSpace > -1) {
-                    players.forEach((p, idx) => {
-                        if (!p.exploded && p.currentSpace === maxSpace) eligibleDiceRollers.push(idx);
-                    });
-                }
             }
             currentDiceRollerIndex = 0;
             processNextDiceRoller();
@@ -1203,12 +1194,25 @@
         function processNextDiceRoller() {
             if (currentDiceRollerIndex < eligibleDiceRollers.length) {
                 const pIdx = eligibleDiceRollers[currentDiceRollerIndex];
-                document.getElementById('dice-player-name').innerText = `${players[pIdx].name} earned a bonus roll!`;
-                document.getElementById('dice-face').innerText = '🎲';
-                document.getElementById('dice-result-text').innerText = 'Ready to roll...';
-                document.getElementById('dice-roll-btn').classList.remove('hidden');
-                document.getElementById('dice-continue-btn').classList.add('hidden');
-                document.getElementById('dice-modal').classList.remove('hidden');
+                const p = players[pIdx];
+                if (p.isAI) {
+                    // AI auto rolls die
+                    const finalFace = DICE_FACES[Math.floor(Math.random() * DICE_FACES.length)];
+                    if (finalFace.droplet) p.droplet += 1;
+                    if (finalFace.vp) p.vp += finalFace.vp;
+                    if (finalFace.ruby) p.rubies += finalFace.ruby;
+                    if (finalFace.pumpkin) p.bag.push({ color: 'orange', val: 1, name: 'Orange Pumpkin 1' });
+                    logEvent(`🎲 ${p.name} (AI) rolled Bonus Die: ${finalFace.text}`);
+                    currentDiceRollerIndex++;
+                    processNextDiceRoller();
+                } else {
+                    document.getElementById('dice-player-name').innerText = `${p.name} earned a bonus roll!`;
+                    document.getElementById('dice-face').innerText = '🎲';
+                    document.getElementById('dice-result-text').innerText = 'Ready to roll...';
+                    document.getElementById('dice-roll-btn').classList.remove('hidden');
+                    document.getElementById('dice-continue-btn').classList.add('hidden');
+                    document.getElementById('dice-modal').classList.remove('hidden');
+                }
             } else {
                 document.getElementById('dice-modal').classList.add('hidden');
                 openEndRoundModal();
@@ -1238,7 +1242,7 @@
                     document.getElementById('dice-result-text').innerText = finalFace.text;
                     
                     if (finalFace.droplet) {
-                        logEvent(`🎲 ${p.name} rolled the Bonus Die and won: +1 Droplet Space!`);
+                        logEvent(`🎲 ${p.name} rolled the Bonus Die: +1 Droplet Space!`);
                         playSound('coin');
                         initiateDropletChoice(pIdx, 'dice');
                     } else {
@@ -1246,7 +1250,7 @@
                         if (finalFace.ruby) p.rubies += finalFace.ruby;
                         if (finalFace.pumpkin) p.bag.push({ color: 'orange', val: 1, name: 'Orange Pumpkin 1' });
                         
-                        logEvent(`🎲 ${p.name} rolled the Bonus Die and won: ${finalFace.text}!`);
+                        logEvent(`🎲 ${p.name} rolled Bonus Die: ${finalFace.text}!`);
                         playSound('coin');
                         renderAll();
                         document.getElementById('dice-continue-btn').classList.remove('hidden');
@@ -1260,12 +1264,20 @@
             processNextDiceRoller();
         }
 
-        /* --- DROPLET INTERCEPTOR LOGIC --- */
-
         function initiateDropletChoice(pIdx, context) {
+            const p = players[pIdx];
+            if (p.isAI) {
+                if (p.testTubeLevel < 12 && Math.random() > 0.5) {
+                    p.testTubeLevel++; applyVialReward(p.testTubeLevel, true);
+                } else {
+                    p.droplet++;
+                }
+                if (context === 'dice') continueDicePhase();
+                return;
+            }
+
             pendingDropletPlayer = pIdx;
             pendingDropletContext = context;
-            const p = players[pIdx];
 
             const vialBtn = document.getElementById('droplet-vial-btn');
             const vialText = document.getElementById('droplet-vial-text');
@@ -1295,38 +1307,31 @@
                 finishDropletChoice();
             } else if (path === 'vial') {
                 p.testTubeLevel += 1;
-                applyVialReward(p.testTubeLevel);
+                applyVialReward(p.testTubeLevel, p.isAI);
             }
         }
 
-        function applyVialReward(lvl) {
-            const p = players[pendingDropletPlayer];
+        function applyVialReward(lvl, isAI) {
+            const p = players[pendingDropletPlayer || activePlayerIndex];
             let needsChoice = false;
 
-            if (lvl === 1 || lvl === 4 || lvl === 7 || lvl === 10) {
-                p.rubies += 1;
-                logEvent(`🧪 ${p.name} reached Test Tube Level ${lvl}: Gained +1 Ruby!`);
-            } else if (lvl === 2) {
-                p.vp += 1; logEvent(`🧪 ${p.name} reached Test Tube Level 2: Gained +1 VP!`);
-            } else if (lvl === 3) {
-                p.bag.push({color: 'blue', val: 1, name: 'Crow Skull 1'}); logEvent(`🧪 ${p.name} reached Level 3: Gained Blue 1 to bag!`);
-            } else if (lvl === 5) {
-                p.bag.push({color: 'black', val: 1, name: 'Black Moth 1'}); logEvent(`🧪 ${p.name} reached Level 5: Gained Black 1 to bag!`);
-            } else if (lvl === 6) {
-                p.vp += 2; logEvent(`🧪 ${p.name} reached Level 6: Gained +2 VP!`);
-            } else if (lvl === 8) {
-                needsChoice = true;
-                showVialChoiceModal('red2_green2');
-            } else if (lvl === 9) {
-                p.vp += 3; logEvent(`🧪 ${p.name} reached Level 9: Gained +3 VP!`);
-            } else if (lvl === 11) {
-                needsChoice = true;
-                showVialChoiceModal('yellow4_purple2');
-            } else if (lvl === 12) {
-                p.vp += 4; logEvent(`🧪 ${p.name} reached Level 12: Gained +4 VP!`);
+            if (lvl === 1 || lvl === 4 || lvl === 7 || lvl === 10) { p.rubies += 1; }
+            else if (lvl === 2) { p.vp += 1; }
+            else if (lvl === 3) { p.bag.push({color: 'blue', val: 1, name: 'Crow Skull 1'}); }
+            else if (lvl === 5) { p.bag.push({color: 'black', val: 1, name: 'Black Moth 1'}); }
+            else if (lvl === 6) { p.vp += 2; }
+            else if (lvl === 8) {
+                if (isAI) p.bag.push({color: 'red', val: 2, name: 'Red Toadstool 2'});
+                else { needsChoice = true; showVialChoiceModal('red2_green2'); }
             }
+            else if (lvl === 9) { p.vp += 3; }
+            else if (lvl === 11) {
+                if (isAI) p.bag.push({color: 'yellow', val: 4, name: 'Yellow Mandrake 4'});
+                else { needsChoice = true; showVialChoiceModal('yellow4_purple2'); }
+            }
+            else if (lvl === 12) { p.vp += 4; }
 
-            if (!needsChoice) finishDropletChoice();
+            if (!needsChoice && !isAI) finishDropletChoice();
         }
 
         function showVialChoiceModal(choiceType) {
@@ -1349,29 +1354,24 @@
             document.getElementById('vial-chip-choice-modal').classList.add('hidden');
             const p = players[pendingDropletPlayer];
             
-            if (choice === 'red2') { p.bag.push({color: 'red', val: 2, name: 'Red Toadstool 2'}); logEvent(`🧪 ${p.name} chose Red 2 for their Level 8 reward!`); }
-            else if (choice === 'green2') { p.bag.push({color: 'green', val: 2, name: 'Green Spider 2'}); logEvent(`🧪 ${p.name} chose Green 2 for their Level 8 reward!`); }
-            else if (choice === 'yellow4') { p.bag.push({color: 'yellow', val: 4, name: 'Yellow Mandrake 4'}); logEvent(`🧪 ${p.name} chose Yellow 4 for their Level 11 reward!`); }
-            else if (choice === 'purple2') { p.bag.push({color: 'purple', val: 2, name: 'Purple Ghost 2'}); logEvent(`🧪 ${p.name} chose Purple 2 for their Level 11 reward!`); }
+            if (choice === 'red2') p.bag.push({color: 'red', val: 2, name: 'Red Toadstool 2'});
+            else if (choice === 'green2') p.bag.push({color: 'green', val: 2, name: 'Green Spider 2'});
+            else if (choice === 'yellow4') p.bag.push({color: 'yellow', val: 4, name: 'Yellow Mandrake 4'});
+            else if (choice === 'purple2') p.bag.push({color: 'purple', val: 2, name: 'Purple Ghost 2'});
 
             finishDropletChoice();
         }
 
         function finishDropletChoice() {
             renderAll();
-            if (pendingDropletContext === 'shop') {
-                renderShopModalUI();
-            } else if (pendingDropletContext === 'dice') {
-                document.getElementById('dice-continue-btn').classList.remove('hidden');
-            }
+            if (pendingDropletContext === 'shop') renderShopModalUI();
+            else if (pendingDropletContext === 'dice') document.getElementById('dice-continue-btn').classList.remove('hidden');
             pendingDropletPlayer = null;
             pendingDropletContext = null;
         }
 
         function updateBustMeter(pIdx) {
             const p = players[pIdx];
-            const prefix = pIdx === 0 ? 'p1' : 'p2';
-            
             const yellowCount = p.drawnChips.filter(c => c.color === 'yellow').length;
             let maxWhite = 7;
             if (activeSets.yellow === 3) {
@@ -1381,44 +1381,41 @@
             
             let safeRemaining = maxWhite - p.whiteSum;
             let available = getUndrawnBag(p);
-            let explodeCount = 0;
-            
-            available.forEach(c => {
-                if (c.color === 'white' && c.val > safeRemaining) {
-                    explodeCount++;
-                }
-            });
+            let explodeCount = available.filter(c => c.color === 'white' && c.val > safeRemaining).length;
             
             let pct = available.length === 0 ? 0 : Math.round((explodeCount / available.length) * 100);
             if (p.exploded) pct = 100;
             else if (p.finished) pct = 0;
             
-            const textEl = document.getElementById(`${prefix}-bust-text`);
-            const barEl = document.getElementById(`${prefix}-bust-bar`);
-            const shieldEl = document.getElementById(`${prefix}-bust-shield`);
+            const textEl = document.getElementById(`p${pIdx}-bust-text`);
+            const barEl = document.getElementById(`p${pIdx}-bust-bar`);
+            const shieldEl = document.getElementById(`p${pIdx}-bust-shield`);
             
-            textEl.innerText = `${pct}%`;
-            barEl.style.width = `${pct}%`;
-            
-            let barColor = pct < 25 ? 'bg-emerald-500' : pct < 50 ? 'bg-amber-500' : 'bg-red-500';
-            let textColor = pct < 25 ? 'text-emerald-400' : pct < 50 ? 'text-amber-400' : 'text-red-400';
-            
-            if (p.blueSafetyTokens > 0 && activeSets.blue === 2) {
-                shieldEl.innerHTML = `🛡️ Safe (${p.blueSafetyTokens})`;
-                shieldEl.className = "text-sky-400 ml-1";
-            } else {
-                shieldEl.innerHTML = '';
+            if (textEl && barEl) {
+                textEl.innerText = `${pct}%`;
+                barEl.style.width = `${pct}%`;
+                let barColor = pct < 25 ? 'bg-emerald-500' : pct < 50 ? 'bg-amber-500' : 'bg-red-500';
+                let textColor = pct < 25 ? 'text-emerald-400' : pct < 50 ? 'text-amber-400' : 'text-red-400';
+                
+                if (p.blueSafetyTokens > 0 && activeSets.blue === 2) {
+                    shieldEl.innerHTML = `🛡️ Safe (${p.blueSafetyTokens})`;
+                    shieldEl.className = "text-sky-400 ml-1";
+                } else {
+                    shieldEl.innerHTML = '';
+                }
+                barEl.className = `${barColor} h-full transition-all duration-300`;
+                textEl.className = `${textColor}`;
             }
-            
-            barEl.className = `${barColor} h-full transition-all duration-300`;
-            textEl.className = `${textColor}`;
         }
 
         function updateControlsState() {
-            const p1Active = activePlayerIndex === 0 && !players[0].finished;
-            const p2Active = activePlayerIndex === 1 && !players[1].finished && gameMode === '2p';
-            document.getElementById('p1-controls').className = p1Active ? "space-y-2" : "space-y-2 opacity-50 pointer-events-none";
-            document.getElementById('p2-controls').className = p2Active ? "space-y-2" : "space-y-2 opacity-50 pointer-events-none";
+            players.forEach((p, idx) => {
+                const controlsEl = document.getElementById(`p${idx}-controls`);
+                if (controlsEl) {
+                    const isActive = activePlayerIndex === idx && !p.finished && !p.isEliminated;
+                    controlsEl.className = isActive ? "space-y-2" : "space-y-2 opacity-50 pointer-events-none";
+                }
+            });
         }
 
         function getUndrawnBag(p) {
@@ -1440,10 +1437,9 @@
         }
 
         function setupBoardInspector(pIdx) {
-            const canvasId = pIdx === 0 ? 'p1-canvas' : 'p2-canvas';
-            const tooltipId = pIdx === 0 ? 'p1-tooltip' : 'p2-tooltip';
-            const canvas = document.getElementById(canvasId);
-            const tooltip = document.getElementById(tooltipId);
+            const canvas = document.getElementById(`p${pIdx}-canvas`);
+            const tooltip = document.getElementById(`p${pIdx}-tooltip`);
+            if (!canvas || !tooltip) return;
             const coords = getTrackCoords();
 
             canvas.addEventListener('mousemove', (e) => {
@@ -1468,9 +1464,7 @@
                 }
             });
 
-            canvas.addEventListener('mouseleave', () => {
-                tooltip.classList.add('hidden');
-            });
+            canvas.addEventListener('mouseleave', () => tooltip.classList.add('hidden'));
         }
 
         function animate() {
@@ -1484,16 +1478,16 @@
         }
 
         function renderAll() {
-            renderPlayerBoard(0);
-            if (gameMode === '2p') renderPlayerBoard(1);
-            updateBustMeter(0);
-            if (gameMode === '2p') updateBustMeter(1);
+            players.forEach((_, idx) => {
+                renderPlayerBoard(idx);
+                updateBustMeter(idx);
+            });
         }
 
         function renderPlayerBoard(pIdx) {
             const p = players[pIdx];
-            const prefix = pIdx === 0 ? 'p1' : 'p2';
-            const canvas = document.getElementById(`${prefix}-canvas`);
+            const canvas = document.getElementById(`p${pIdx}-canvas`);
+            if (!canvas) return;
             const ctx = canvas.getContext('2d');
             canvas.width = 400; canvas.height = 400;
             ctx.clearRect(0, 0, 400, 400);
@@ -1543,7 +1537,6 @@
                 ctx.fillStyle = pt.color; ctx.globalAlpha = pt.life; ctx.fill(); ctx.globalAlpha = 1.0;
             });
             
-            // Dynamic White Sum Indicator
             const yellowCount = p.drawnChips.filter(c => c.color === 'yellow').length;
             let maxWhite = 7;
             if (activeSets.yellow === 3) {
@@ -1551,14 +1544,13 @@
                 else if (yellowCount >= 1) maxWhite = 8;
             }
 
-            document.getElementById(`${prefix}-white-sum`).innerText = `${p.whiteSum} / ${maxWhite}`;
-            document.getElementById(`${prefix}-position`).innerText = `Space ${p.currentSpace}`;
-            document.getElementById(`${prefix}-potion-status`).innerText = p.potionFull ? 'Ready' : 'Empty';
-            document.getElementById(`${prefix}-coins-val`).innerText = (TRACK[p.currentSpace] || TRACK[33]).coins;
-            document.getElementById(`${prefix}-vp-val`).innerText = p.vp + (TRACK[p.currentSpace] || TRACK[33]).vp;
-            document.getElementById(`${prefix}-rubies-val`).innerText = p.rubies;
+            document.getElementById(`p${pIdx}-white-sum`).innerText = `${p.whiteSum} / ${maxWhite}`;
+            document.getElementById(`p${pIdx}-position`).innerText = `Space ${p.currentSpace}`;
+            document.getElementById(`p${pIdx}-potion-status`).innerText = p.potionFull ? 'Ready' : 'Empty';
+            document.getElementById(`p${pIdx}-coins-val`).innerText = (TRACK[p.currentSpace] || TRACK[33]).coins;
+            document.getElementById(`p${pIdx}-vp-val`).innerText = p.vp + (TRACK[p.currentSpace] || TRACK[33]).vp;
+            document.getElementById(`p${pIdx}-rubies-val`).innerText = p.rubies;
 
-            // Render Vial Track
             const vialHtml = VIAL_REWARDS.map((r, i) => {
                 let isActive = p.testTubeLevel > i;
                 let isNext = p.testTubeLevel === i;
@@ -1567,23 +1559,14 @@
                     ${r.icon}
                 </div>`;
             }).join('');
-            document.getElementById(`${prefix}-vial-track`).innerHTML = vialHtml;
-            document.getElementById(`${prefix}-vial-level`).innerText = `Level ${p.testTubeLevel} / 12`;
+            document.getElementById(`p${pIdx}-vial-track`).innerHTML = vialHtml;
+            document.getElementById(`p${pIdx}-vial-level`).innerText = `Level ${p.testTubeLevel} / 12`;
 
-            const placedContainer = document.getElementById(`${prefix}-placed-chips`);
-            document.getElementById(`${prefix}-placed-count`).innerText = `${p.drawnChips.length} chips`;
+            const placedContainer = document.getElementById(`p${pIdx}-placed-chips`);
+            document.getElementById(`p${pIdx}-placed-count`).innerText = `${p.drawnChips.length} chips`;
             placedContainer.innerHTML = p.drawnChips.length === 0 
-                ? `<span class="text-slate-500 text-[11px] italic">No chips drawn yet this round.</span>`
+                ? `<span class="text-slate-500 text-[11px] italic">No chips drawn yet.</span>`
                 : p.drawnChips.map(c => `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border border-slate-600 shadow-sm" style="background-color:${getChipHex(c.color)}; color: ${c.color === 'white' ? '#0f172a' : '#ffffff'}">${c.name}</span>`).join('');
-                
-            const asideContainer = document.getElementById(`${prefix}-aside-red-container`);
-            const asideContent = document.getElementById(`${prefix}-aside-red`);
-            if (p.asideRedChips && p.asideRedChips.length > 0) {
-                asideContainer.classList.remove('hidden');
-                asideContent.innerHTML = p.asideRedChips.map(c => `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border border-red-500 shadow-sm bg-red-500 text-white">${c.name}</span>`).join('');
-            } else {
-                asideContainer.classList.add('hidden');
-            }
         }
 
         function getChipHex(color) {
@@ -1593,54 +1576,26 @@
 
         function openEndRoundModal() {
             players.forEach(p => {
+                if (p.isEliminated) return;
                 const spaceData = TRACK[p.currentSpace] || TRACK[33];
                 if (p.exploded) {
-                    if (p.explodedProtected) {
-                        p.vp += spaceData.vp;
-                    } else if (p.explosionChoice === 'vp') {
-                        p.vp += spaceData.vp;
-                    }
+                    if (p.explodedProtected || p.explosionChoice === 'vp') p.vp += spaceData.vp;
                 } else {
                     p.vp += spaceData.vp;
                 }
                 
                 if (spaceData.ruby) p.rubies += 1;
 
-                if (activeSets.green === 1 && p.drawnChips.length > 0) {
-                    const lastChip = p.drawnChips[p.drawnChips.length - 1];
-                    const nextToLast = p.drawnChips.length > 1 ? p.drawnChips[p.drawnChips.length - 2] : null;
-                    if (lastChip.color === 'green') p.rubies += 1;
-                    if (nextToLast && nextToLast.color === 'green') p.rubies += 1;
-                }
-                
-                if (activeSets.green === 4 && p.drawnChips.length > 0) {
-                    const lastChip = p.drawnChips[p.drawnChips.length - 1];
-                    const nextToLast = p.drawnChips.length > 1 ? p.drawnChips[p.drawnChips.length - 2] : null;
-                    if (lastChip.color === 'green') p.greenSpiderUses += 1;
-                    if (nextToLast && nextToLast.color === 'green') p.greenSpiderUses += 1;
-                }
-                
-                // Set 2 Green Spider
-                if (activeSets.green === 2 && p.drawnChips.length > 0) {
-                    const lastChip = p.drawnChips[p.drawnChips.length - 1];
-                    const nextToLast = p.drawnChips.length > 1 ? p.drawnChips[p.drawnChips.length - 2] : null;
-                    
-                    [lastChip, nextToLast].forEach(c => {
-                        if (c && c.color === 'green') {
-                            if (c.val === 1) {
-                                p.bag.push({ color: 'orange', val: 1, name: 'Orange Pumpkin 1' });
-                                logEvent(`🕷️ ${p.name}'s Green Spider 1 automatically added an Orange Pumpkin 1 to their bag!`);
-                            } else if (c.val === 2) {
-                                p.pendingGreenRewards.push(2);
-                            } else if (c.val === 4) {
-                                p.pendingGreenRewards.push(4);
-                            }
-                        }
-                    });
-                }
+                if (p.isAI) runAIShop(p);
             });
 
-            currentShopperIndex = 0;
+            currentShopperIndex = players.findIndex(p => !p.isEliminated && !p.isAI);
+            if (currentShopperIndex === -1) {
+                // All AI game or all human finished
+                advanceShop();
+                return;
+            }
+
             currentTurnPurchases = [];
             const p = players[currentShopperIndex];
             const spaceData = TRACK[p.currentSpace] || TRACK[33];
@@ -1650,22 +1605,51 @@
             document.getElementById('end-round-modal').classList.remove('hidden');
         }
 
+        function runAIShop(p) {
+            const spaceData = TRACK[p.currentSpace] || TRACK[33];
+            let coins = (p.exploded && !p.explodedProtected && p.explosionChoice === 'vp') ? 0 : spaceData.coins;
+            
+            // AI buys highest cost chip available
+            let catalog = [
+                { color: 'yellow', val: 2, name: 'Mandrake 2', cost: 12 },
+                { color: 'blue', val: 2, name: 'Crow Skull 2', cost: 10 },
+                { color: 'red', val: 2, name: 'Red Toadstool 2', cost: 10 },
+                { color: 'green', val: 2, name: 'Green Spider 2', cost: 8 },
+                { color: 'yellow', val: 1, name: 'Mandrake 1', cost: 8 },
+                { color: 'orange', val: 2, name: 'Orange Pumpkin 2', cost: 6 },
+                { color: 'orange', val: 1, name: 'Orange Pumpkin 1', cost: 3 }
+            ];
+
+            let boughtColors = [];
+            for(let item of catalog) {
+                if (coins >= item.cost && boughtColors.length < 2 && !boughtColors.includes(item.color)) {
+                    p.bag.push({ color: item.color, val: item.val, name: item.name });
+                    coins -= item.cost;
+                    boughtColors.push(item.color);
+                    p.stats.chipsBought++;
+                }
+            }
+
+            // AI spends rubies on droplet or potion
+            if (p.rubies >= 2) {
+                p.rubies -= 2; p.droplet++; p.stats.rubiesSpent += 2;
+            } else if (!p.potionFull && p.rubies >= 2) {
+                p.rubies -= 2; p.potionFull = true; p.stats.rubiesSpent += 2;
+            }
+        }
+
         function renderShopModalUI() {
             const p = players[currentShopperIndex];
             document.getElementById('round-rewards-summary').innerHTML = players.map((pl, idx) => {
-                if (gameMode === '1p' && idx === 1) return '';
+                if (pl.isEliminated) return '';
                 const pSpaceData = TRACK[pl.currentSpace] || TRACK[33];
                 let summaryText = `Earned ${pSpaceData.coins} Coins & +${pSpaceData.vp} VP`;
                 if (pl.exploded) {
-                    if (pl.explodedProtected) {
-                        summaryText = `🛡️ Protected Bust: Earned ${pSpaceData.coins} Coins & +${pSpaceData.vp} VP`;
-                    } else {
-                        summaryText = pl.explosionChoice === 'vp' ? `💥 Took +${pSpaceData.vp} VP (Forfeited Coins)` : `💥 Took ${pSpaceData.coins} Coins (Forfeited VP)`;
-                    }
+                    summaryText = pl.explosionChoice === 'vp' ? `💥 Took +${pSpaceData.vp} VP (Forfeited Coins)` : `💥 Took ${pSpaceData.coins} Coins (Forfeited VP)`;
                 }
                 return `
                     <div class="p-2.5 bg-slate-800 rounded-lg border ${idx === currentShopperIndex ? 'border-amber-500 shadow-md' : 'border-slate-700'} space-y-1">
-                        <div class="font-bold ${idx === currentShopperIndex ? 'text-amber-400' : 'text-slate-400'}">${pl.name}</div>
+                        <div class="font-bold ${idx === currentShopperIndex ? 'text-amber-400' : 'text-slate-400'}">${pl.name} ${pl.isAI ? '🤖' : ''}</div>
                         <div class="text-[11px] text-slate-300">${summaryText} (Total VP: ${pl.vp})</div>
                     </div>
                 `;
@@ -1679,92 +1663,30 @@
             const shopUI = document.getElementById('shop-ui-elements');
             const nextBtn = document.getElementById('shop-next-btn');
 
-            if (p.pendingGreenRewards && p.pendingGreenRewards.length > 0) {
-                greenContainer.classList.remove('hidden');
-                shopUI.classList.add('hidden');
-                nextBtn.classList.add('hidden');
-                
-                const val = p.pendingGreenRewards[0];
-                if (val === 2) {
-                    greenContainer.innerHTML = `
-                        <h4 class="font-bold text-sm text-green-400">Green Spider Bonus (Val 2)</h4>
-                        <p class="text-xs text-slate-300 mb-3">Choose a chip to add to your bag for free:</p>
-                        <div class="grid grid-cols-2 gap-2">
-                            <button onclick="resolveGreenSpiderReward('blue', 1)" class="p-3 bg-sky-900 border border-sky-500 rounded-xl text-sky-300 font-bold text-xs hover:bg-sky-800 transition">Blue Crow 1</button>
-                            <button onclick="resolveGreenSpiderReward('red', 1)" class="p-3 bg-red-900 border border-red-500 rounded-xl text-red-300 font-bold text-xs hover:bg-red-800 transition">Red Toadstool 1</button>
-                        </div>
-                    `;
-                } else if (val === 4) {
-                    greenContainer.innerHTML = `
-                        <h4 class="font-bold text-sm text-green-400">Green Spider Bonus (Val 4)</h4>
-                        <p class="text-xs text-slate-300 mb-3">Choose a chip to add to your bag for free:</p>
-                        <div class="grid grid-cols-2 gap-2">
-                            <button onclick="resolveGreenSpiderReward('yellow', 1)" class="p-3 bg-yellow-900 border border-yellow-500 rounded-xl text-yellow-300 font-bold text-xs hover:bg-yellow-800 transition">Yellow Mandrake 1</button>
-                            <button onclick="resolveGreenSpiderReward('purple', 1)" class="p-3 bg-purple-900 border border-purple-500 rounded-xl text-purple-300 font-bold text-xs hover:bg-purple-800 transition">Purple Ghost 1</button>
-                        </div>
-                    `;
-                }
-            } else {
-                greenContainer.classList.add('hidden');
-                shopUI.classList.remove('hidden');
-                nextBtn.classList.remove('hidden');
+            greenContainer.classList.add('hidden');
+            shopUI.classList.remove('hidden');
+            nextBtn.classList.remove('hidden');
 
-                const flaskCost = (activeFortuneCard && activeFortuneCard.id === 'flask') ? 1 : 2;
-                const spiderBtnHtml = (activeSets.green === 4 && p.greenSpiderUses > 0) ? `
-                    <button onclick="buySpiderDroplet()" class="p-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed border border-green-500 rounded-lg text-left text-xs space-y-0.5 transition-all active:scale-95" ${p.rubies < 1 ? 'disabled' : ''}>
-                        <div class="font-bold text-green-400">Spider Droplet (1 Ruby)</div>
-                        <div class="text-slate-400 text-[10px]">Earn droplet advance (${p.greenSpiderUses} use${p.greenSpiderUses>1?'s':''} left)</div>
-                    </button>
-                ` : '';
-                
-                document.getElementById('ruby-purchases-container').innerHTML = `
-                    <button id="ruby-droplet-btn" onclick="buyDroplet()" class="p-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed border border-slate-600 rounded-lg text-left text-xs space-y-0.5 transition-all active:scale-95" ${p.rubies < 2 ? 'disabled' : ''}>
-                        <div class="font-bold text-emerald-400">+1 Droplet Advance (2 Rubies)</div>
-                        <div class="text-slate-400 text-[10px]">Spiral Track or Test Tube</div>
-                    </button>
-                    <button id="ruby-potion-btn" onclick="buyPotionRefill()" class="p-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed border border-slate-600 rounded-lg text-left text-xs space-y-0.5 transition-all active:scale-95" ${p.rubies < flaskCost || p.potionFull ? 'disabled' : ''}>
-                        <div class="font-bold text-cyan-400">Refill Potion Flask (${flaskCost} Rubies)</div>
-                        <div class="text-slate-400 text-[10px]">Recharges empty potion</div>
-                    </button>
-                    ${spiderBtnHtml}
-                `;
+            const flaskCost = (activeFortuneCard && activeFortuneCard.id === 'flask') ? 1 : 2;
+            
+            document.getElementById('ruby-purchases-container').innerHTML = `
+                <button id="ruby-droplet-btn" onclick="buyDroplet()" class="p-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed border border-slate-600 rounded-lg text-left text-xs space-y-0.5 transition-all active:scale-95" ${p.rubies < 2 ? 'disabled' : ''}>
+                    <div class="font-bold text-emerald-400">+1 Droplet Advance (2 Rubies)</div>
+                    <div class="text-slate-400 text-[10px]">Spiral Track or Test Tube</div>
+                </button>
+                <button id="ruby-potion-btn" onclick="buyPotionRefill()" class="p-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed border border-slate-600 rounded-lg text-left text-xs space-y-0.5 transition-all active:scale-95" ${p.rubies < flaskCost || p.potionFull ? 'disabled' : ''}>
+                    <div class="font-bold text-cyan-400">Refill Potion Flask (${flaskCost} Rubies)</div>
+                    <div class="text-slate-400 text-[10px]">Recharges empty potion</div>
+                </button>
+            `;
 
-                nextBtn.innerText = (gameMode === '2p' && currentShopperIndex === 0) ? `FINISH ${p.name.toUpperCase()}'S SHOP & PASS TO PLAYER 2` : "ADVANCE TO NEXT ROUND";
-                renderMarketCatalog();
-            }
-        }
-
-        function resolveGreenSpiderReward(color, val) {
-            const p = players[currentShopperIndex];
-            p.bag.push({ color: color, val: val, name: `${color.charAt(0).toUpperCase() + color.slice(1)} ${val}` });
-            p.pendingGreenRewards.shift();
-            playSound('coin');
-            logEvent(`🕷️ ${p.name} chose ${color} ${val} from their Green Spider bonus!`);
-            renderShopModalUI();
-        }
-
-        function buySpiderDroplet() {
-            const p = players[currentShopperIndex];
-            if (p.rubies >= 1 && p.greenSpiderUses > 0) {
-                p.rubies -= 1;
-                p.greenSpiderUses -= 1;
-                playSound('coin');
-                initiateDropletChoice(currentShopperIndex, 'shop');
-            }
-        }
-
-        function buyDroplet() {
-            const p = players[currentShopperIndex];
-            if (p.rubies >= 2) {
-                p.rubies -= 2;
-                playSound('coin');
-                initiateDropletChoice(currentShopperIndex, 'shop');
-            }
+            renderMarketCatalog();
         }
 
         function advanceShop() {
-            if (gameMode === '2p' && currentShopperIndex === 0) {
-                currentShopperIndex = 1;
+            let nextHumanIdx = players.findIndex((p, idx) => idx > currentShopperIndex && !p.isEliminated && !p.isAI);
+            if (nextHumanIdx !== -1) {
+                currentShopperIndex = nextHumanIdx;
                 currentTurnPurchases = [];
                 const p = players[currentShopperIndex];
                 const spaceData = TRACK[p.currentSpace] || TRACK[33];
@@ -1781,19 +1703,14 @@
                 { color: 'orange', val: 1, name: 'Orange Pumpkin 1', cost: Math.max(1, 3 - discount) },
                 { color: 'orange', val: 2, name: 'Orange Pumpkin 2', cost: Math.max(1, 6 - discount) },
                 { color: 'orange', val: 4, name: 'Orange Pumpkin 4', cost: Math.max(1, 12 - discount) },
-                { color: 'orange', val: 6, name: 'Orange Pumpkin 6', cost: Math.max(1, 22 - discount) },
                 { color: 'green', val: 1, name: 'Green Garden Spider 1', cost: Math.max(1, 4 - discount) },
                 { color: 'green', val: 2, name: 'Green Garden Spider 2', cost: Math.max(1, 8 - discount) },
-                { color: 'green', val: 4, name: 'Green Garden Spider 4', cost: Math.max(1, 14 - discount) },
                 { color: 'blue', val: 1, name: 'Crow Skull 1', cost: Math.max(1, 5 - discount) },
                 { color: 'blue', val: 2, name: 'Crow Skull 2', cost: Math.max(1, 10 - discount) },
-                { color: 'blue', val: 4, name: 'Crow Skull 4', cost: Math.max(1, 19 - discount) },
                 { color: 'red', val: 1, name: 'Red Toadstool 1', cost: Math.max(1, 6 - discount) },
                 { color: 'red', val: 2, name: 'Red Toadstool 2', cost: Math.max(1, 10 - discount) },
-                { color: 'red', val: 4, name: 'Red Toadstool 4', cost: Math.max(1, 16 - discount) },
                 { color: 'yellow', val: 1, name: 'Mandrake 1', cost: Math.max(1, 8 - discount) },
-                { color: 'yellow', val: 2, name: 'Mandrake 2', cost: Math.max(1, 12 - discount) },
-                { color: 'yellow', val: 4, name: 'Mandrake 4', cost: Math.max(1, 19 - discount) }
+                { color: 'yellow', val: 2, name: 'Mandrake 2', cost: Math.max(1, 12 - discount) }
             ];
 
             document.getElementById('market-catalog').innerHTML = catalog.map(item => {
@@ -1801,15 +1718,11 @@
                 const alreadyBoughtColor = currentTurnPurchases.includes(item.color);
                 const maxPurchasesReached = currentTurnPurchases.length >= 2;
                 const isDisabled = !canAfford || alreadyBoughtColor || maxPurchasesReached;
-                
-                let errorMsg = '';
-                if (alreadyBoughtColor) errorMsg = '(Color already bought)';
-                else if (maxPurchasesReached) errorMsg = '(Max 2 chips)';
 
                 return `
                 <div class="p-2 bg-slate-900 border border-slate-700 rounded-lg flex justify-between items-center ${isDisabled ? 'opacity-50' : ''}">
                     <div>
-                        <div class="font-bold text-xs text-slate-200">${item.name} <span class="text-[9px] text-red-400 font-bold">${errorMsg}</span></div>
+                        <div class="font-bold text-xs text-slate-200">${item.name}</div>
                         <div class="text-[10px] text-amber-400">Cost: ${item.cost} Coins</div>
                     </div>
                     <button onclick="buyChip('${item.color}', ${item.val}, ${item.cost})" ${isDisabled ? 'disabled' : ''} class="px-2.5 py-1 bg-amber-500 hover:bg-amber-400 disabled:bg-slate-700 disabled:text-slate-500 text-slate-950 font-bold text-xs rounded transition-all active:scale-95">
@@ -1827,8 +1740,19 @@
                 p.bag.push({ color, val, name: `${color.toUpperCase()} ${val}` });
                 currentTurnCoins -= cost;
                 currentTurnPurchases.push(color);
+                p.stats.chipsBought++;
                 logEvent(`${p.name} bought ${color.toUpperCase()} ${val} for ${cost} coins!`);
                 renderShopModalUI();
+            }
+        }
+
+        function buyDroplet() {
+            const p = players[currentShopperIndex];
+            if (p.rubies >= 2) {
+                p.rubies -= 2;
+                p.stats.rubiesSpent += 2;
+                playSound('coin');
+                initiateDropletChoice(currentShopperIndex, 'shop');
             }
         }
 
@@ -1836,7 +1760,7 @@
             const p = players[currentShopperIndex];
             const flaskCost = (activeFortuneCard && activeFortuneCard.id === 'flask') ? 1 : 2;
             if (p.rubies >= flaskCost && !p.potionFull) {
-                p.rubies -= flaskCost; p.potionFull = true;
+                p.rubies -= flaskCost; p.potionFull = true; p.stats.rubiesSpent += flaskCost;
                 playSound('potion');
                 logEvent(`${p.name} spent ${flaskCost} Rubies -> Potion Refilled!`);
                 renderShopModalUI(); renderAll();
@@ -1844,44 +1768,91 @@
         }
 
         function startNextRound() {
+            document.getElementById('end-round-modal').classList.add('hidden');
+
             if (currentRound >= 9) {
-                document.getElementById('end-round-modal').classList.add('hidden');
-                triggerGameOver(); return;
+                if (gameMode === 'survival') {
+                    handleSurvivalElimination();
+                    return;
+                } else {
+                    triggerGameOver();
+                    return;
+                }
             }
             currentRound++;
             document.getElementById('round-indicator').innerText = `Round ${currentRound} / 9`;
-            document.getElementById('end-round-modal').classList.add('hidden');
             initRoundState(); renderAll();
+        }
+
+        function handleSurvivalElimination() {
+            let activePlayers = players.filter(p => !p.isEliminated);
+            if (activePlayers.length <= 1) {
+                triggerGameOver();
+                return;
+            }
+
+            // Find lowest scoring player
+            activePlayers.sort((a, b) => a.vp - b.vp);
+            let eliminatedPlayer = activePlayers[0];
+            eliminatedPlayer.isEliminated = true;
+
+            document.getElementById('eliminated-name').innerText = eliminatedPlayer.name + (eliminatedPlayer.isAI ? ' 🤖' : '');
+            document.getElementById('eliminated-vp').innerText = `Final Score: ${eliminatedPlayer.vp} VP`;
+            document.getElementById('survival-elimination-modal').classList.remove('hidden');
+        }
+
+        function continueSurvivalStage() {
+            document.getElementById('survival-elimination-modal').classList.add('hidden');
+            let remainingActive = players.filter(p => !p.isEliminated);
+            if (remainingActive.length <= 1) {
+                triggerGameOver();
+            } else {
+                survivalStage++;
+                currentRound = 1;
+                document.getElementById('round-indicator').innerText = `Round 1 / 9`;
+                document.getElementById('survival-stage-badge').innerText = `Stage ${survivalStage} (Guillotine)`;
+                buildPlayerBoardsDom();
+                initRoundState();
+                renderAll();
+            }
         }
 
         function triggerGameOver() {
             players.forEach(p => {
-                const rubyVP = Math.floor(p.rubies / 2);
-                if (rubyVP > 0) {
-                    p.vp += rubyVP;
-                    logEvent(`💎 ${p.name} traded in remaining Rubies for ${rubyVP} final VP!`);
+                if(!p.isEliminated) {
+                    const rubyVP = Math.floor(p.rubies / 2);
+                    if (rubyVP > 0) p.vp += rubyVP;
                 }
             });
 
-            const stats = document.getElementById('game-over-stats');
-            const p1 = players[0], p2 = players[1];
-            if (gameMode === '1p') {
-                let rank = p1.vp >= 75 ? "👑 Guildmaster Quack" : p1.vp >= 55 ? "🌟 Master Alchemist" : p1.vp >= 35 ? "🧪 Journeyman Brewer" : "Apprentice Quack";
-                stats.innerHTML = `<div class="text-xs text-amber-400 uppercase tracking-widest font-bold">Final Rank</div>
-                    <div class="text-2xl font-black text-white">${rank}</div>
-                    <div class="grid grid-cols-3 gap-2 pt-2 border-t border-slate-800 text-xs">
-                        <div><div class="text-slate-400">Total VP</div><div class="text-amber-400 font-bold text-base">${p1.vp}</div></div>
-                        <div><div class="text-slate-400">Rubies</div><div class="text-rose-400 font-bold text-base">${p1.rubies}</div></div>
-                        <div><div class="text-slate-400">Droplet</div><div class="text-emerald-400 font-bold text-base">Space ${p1.droplet}</div></div>
-                    </div>`;
-            } else {
-                const winner = p1.vp > p2.vp ? p1 : (p2.vp > p1.vp ? p2 : p1);
-                const isTie = p1.vp === p2.vp;
-                
-                stats.innerHTML = `<div class="text-xs text-amber-400 uppercase tracking-widest font-bold">Winner</div>
-                    <div class="text-2xl font-black text-white">${isTie ? "🤝 IT'S A TIE!" : `🏆 ${winner.name}`}</div>
-                    <div class="mt-2 text-sm text-slate-300">${p1.name}: ${p1.vp} VP | ${p2.name}: ${p2.vp} VP</div>`;
-            }
+            // Find overall winner
+            let sorted = [...players].sort((a, b) => b.vp - a.vp);
+            let champion = sorted[0];
+
+            document.getElementById('champion-name').innerText = champion.name + (champion.isAI ? ' 🤖' : '');
+            document.getElementById('champion-vp').innerText = `Final Tournament Victory Points: ${champion.vp} VP`;
+
+            // Build Dashboard Table
+            const tbody = document.getElementById('dashboard-stats-tbody');
+            tbody.innerHTML = sorted.map(p => {
+                let actualBusts = p.stats.bustCount;
+                let expBusts = p.stats.expectedBustAccumulator;
+                let luckDiff = expBusts - actualBusts; // Positive = Lucky, Negative = Unlucky
+                let luckLabel = luckDiff > 1.0 ? "🍀 Blessed" : luckDiff < -1.0 ? "💀 Cursed" : "⚖️ Neutral";
+                let bustRate = p.stats.totalDraws > 0 ? Math.round((actualBusts / p.stats.totalDraws) * 100) : 0;
+
+                return `
+                    <tr class="${p.isEliminated ? 'opacity-50' : ''}">
+                        <td class="p-2 font-bold ${p.name === champion.name ? 'text-amber-400' : 'text-slate-200'}">${p.name} ${p.isAI ? '🤖' : ''} ${p.isEliminated ? '🪓' : ''}</td>
+                        <td class="p-2 text-center font-extrabold text-sky-400">${p.vp} VP</td>
+                        <td class="p-2 text-center text-slate-300">${bustRate}% (${actualBusts})</td>
+                        <td class="p-2 text-center font-bold">${luckLabel}</td>
+                        <td class="p-2 text-center text-emerald-400">${p.stats.chipsBought}</td>
+                        <td class="p-2 text-center text-rose-400">${p.stats.rubiesSpent}</td>
+                    </tr>
+                `;
+            }).join('');
+
             document.getElementById('game-over-modal').classList.remove('hidden');
         }
 
@@ -1910,20 +1881,7 @@
                 <div class="p-2 bg-slate-900 rounded-lg border border-slate-700"><span class="font-bold text-yellow-400">Yellow Mandrake (Set ${activeSets.yellow}):</span> <span class="text-slate-300">${SET_ALMANAC[activeSets.yellow].yellow}</span></div>
                 <div class="p-2 bg-slate-900 rounded-lg border border-slate-700"><span class="font-bold text-purple-400">Purple Ghost (Set ${activeSets.purple}):</span> <span class="text-slate-300">${SET_ALMANAC[activeSets.purple].purple}</span></div>
             `;
-            
-            const goalsHtml = `
-                <div class="p-3 bg-amber-500/10 rounded-xl border border-amber-500/30 space-y-1.5 mt-2">
-                    <div class="text-xs font-bold text-amber-400 uppercase tracking-wider">Campaign Target Goals (9-Round Tiers)</div>
-                    <div class="grid grid-cols-2 gap-1.5 text-xs text-slate-300">
-                        <div>🎓 <strong>Apprentice:</strong> &lt;35 VP</div>
-                        <div>🧪 <strong>Journeyman:</strong> 35–54 VP</div>
-                        <div>🌟 <strong>Master:</strong> 55–74 VP</div>
-                        <div>👑 <strong>Guildmaster:</strong> 75+ VP</div>
-                    </div>
-                </div>
-            `;
-
-            document.getElementById('almanac-content').innerHTML = almanacHtml + goalsHtml;
+            document.getElementById('almanac-content').innerHTML = almanacHtml;
             document.getElementById('almanac-modal').classList.toggle('hidden');
         }
 
