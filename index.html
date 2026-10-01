@@ -25,7 +25,7 @@
 
     <!-- Version Badge -->
     <div class="fixed bottom-2 right-3 text-[10px] font-mono text-slate-500 pointer-events-none select-none z-30">
-        v1.0.8
+        v1.0.9
     </div>
 
     <!-- PEEK BOARD RETURN BUTTON -->
@@ -521,16 +521,16 @@
             },
             3: {
                 orange: "Standard value.",
-                red: "Adds white value to red chip if placed directly after white.",
-                blue: "Reveal top chip of bag; choose to place or return.",
-                green: "If white sum equals EXACTLY 7, advance last chip by green value.",
-                yellow: "Increases white explosion threshold from 7 to 8 or 9.",
+                red: "If drawn directly after a White chip, add the White chip's value to this chip's movement.",
+                blue: "If placed on a Ruby space, immediately receive 1 Ruby.",
+                green: "If you stop before exploding and your white sum is exactly 7, your last chip jumps forward by the total value of all green chips in your pot.",
+                yellow: "Increases white explosion threshold to 8 (with 1+ yellow in pot) or 9 (with 3+ yellow in pot).",
                 purple: "End-of-round VP based on board zone index (10+, 20+, 30+)."
             },
             4: {
                 orange: "Standard value.",
                 red: "If at least 1 red chip is in pot, subsequent White 1-chips move 2 spaces instead of 1 (but still count as 1 for exploding).",
-                blue: "+1 VP for every blue chip in pot at turn end.",
+                blue: "If placed on a Ruby space, immediately receive Victory Points equal to the chip's value.",
                 green: "In shop phase, you may pay 1 Ruby to move Droplet +1 space for each green chip placed last or next-to-last.",
                 yellow: "Bonus movement scales with total yellow count in pot.",
                 purple: "Instant +1 Ruby if placed on an even-numbered space index."
@@ -625,7 +625,7 @@
                 name: name, droplet: 0, ratTails: 0, potionFull: true, vp: 0, rubies: 2, whiteSum: 0,
                 currentSpace: 0, exploded: false, explosionChoice: null, finished: false, drawnChips: [],
                 greenSpiderUses: 0, blueSafetyTokens: 0, explodedProtected: false, 
-                asideRedChips: [], pendingGreenRewards: [],
+                asideRedChips: [], pendingGreenRewards: [], green3Triggered: false,
                 bag: [
                     { color: 'white', val: 1, name: 'White 1' }, { color: 'white', val: 1, name: 'White 1' },
                     { color: 'white', val: 1, name: 'White 1' }, { color: 'white', val: 2, name: 'White 2' },
@@ -721,6 +721,7 @@
                 p.blueSafetyTokens = 0;
                 p.explodedProtected = false;
                 p.pendingGreenRewards = [];
+                p.green3Triggered = false;
 
                 if (activeFortuneCard && activeFortuneCard.id === 'feast') {
                     const whiteChip = { color: 'white', val: 1, name: 'White 1' };
@@ -792,6 +793,15 @@
                 if (pumpkinCount >= 3) moveDist += 2;
                 else if (pumpkinCount >= 1) moveDist += 1;
             } 
+            else if (chip.color === 'red' && activeSets.red === 3) {
+                if (p.drawnChips.length > 0) {
+                    const lastChip = p.drawnChips[p.drawnChips.length - 1];
+                    if (lastChip.color === 'white') {
+                        moveDist += lastChip.val;
+                        logEvent(`🍄 ${p.name}'s Red Toadstool (Set 3) followed a White ${lastChip.val}, moving ${moveDist} spaces total!`);
+                    }
+                }
+            }
             else if (chip.color === 'yellow' && activeSets.yellow === 1) {
                 if (p.drawnChips.length > 0 && p.drawnChips[p.drawnChips.length - 1].color === 'white') {
                     moveDist *= 2;
@@ -817,6 +827,22 @@
             
             const placedChip = { ...chip, space: p.currentSpace };
             p.drawnChips.push(placedChip);
+
+            // Immediate Blue abilities for Set 3 and Set 4
+            if (chip.color === 'blue') {
+                const landedOnRuby = TRACK[p.currentSpace] ? TRACK[p.currentSpace].ruby : false;
+                if (landedOnRuby) {
+                    if (activeSets.blue === 3) {
+                        p.rubies += 1;
+                        logEvent(`💎 ${p.name}'s Blue Crow (Set 3) landed on a Ruby space! +1 Ruby immediately.`);
+                        playSound('coin'); 
+                    } else if (activeSets.blue === 4) {
+                        p.vp += chip.val;
+                        logEvent(`🌟 ${p.name}'s Blue Crow (Set 4) landed on a Ruby space! +${chip.val} VP immediately.`);
+                        playSound('coin');
+                    }
+                }
+            }
             
             let wasProtectedByBlue = p.blueSafetyTokens > 0 && activeSets.blue === 2;
 
@@ -859,7 +885,7 @@
             
             if (chip.color === 'blue' && activeSets.blue === 2) {
                 p.blueSafetyTokens = chip.val;
-                logEvent(`🛡️️ Blue Crow set! Safe from explosion penalties for the next ${chip.val} chip(s).`);
+                logEvent(`🛡️ Blue Crow set! Safe from explosion penalties for the next ${chip.val} chip(s).`);
             }
 
             renderAll();
@@ -983,11 +1009,30 @@
         }
 
         function handleTurnEnd(pIdx) {
+            const p = players[pIdx];
+            
+            // Check Green Set 3 logic after any Red Set 2 placements are finalized
+            if (!p.exploded && activeSets.green === 3 && p.whiteSum === 7) {
+                if (!p.green3Triggered) {
+                    const greenSum = p.drawnChips.filter(c => c.color === 'green').reduce((sum, c) => sum + c.val, 0);
+                    if (greenSum > 0) {
+                        p.currentSpace = Math.min(33, p.currentSpace + greenSum);
+                        if (p.drawnChips.length > 0) {
+                            p.drawnChips[p.drawnChips.length - 1].space = p.currentSpace;
+                        }
+                        logEvent(`🕷️ ${p.name} stopped with exactly 7 white! Green Spider (Set 3) jumped their last chip ${greenSum} extra spaces!`);
+                        playSound('coin');
+                        renderAll();
+                    }
+                    p.green3Triggered = true;
+                }
+            }
+
             if (gameMode === '2p' && activePlayerIndex === 0 && !players[1].finished) {
                 activePlayerIndex = 1;
                 logEvent(`Turn passed to ${players[1].name}.`);
                 showPrivacyInterceptor(1);
-            } else if (players.every(p => p.finished || gameMode === '1p')) {
+            } else if (players.every(pl => pl.finished || gameMode === '1p')) {
                 updateControlsState(); 
                 renderAll();
                 promptExplosionChoices();
@@ -1567,7 +1612,6 @@
         }
 
         function triggerGameOver() {
-            // Apply Final Ruby Conversions before ranking
             players.forEach(p => {
                 const rubyVP = Math.floor(p.rubies / 2);
                 if (rubyVP > 0) {
@@ -1588,7 +1632,7 @@
                         <div><div class="text-slate-400">Droplet</div><div class="text-emerald-400 font-bold text-base">Space ${p1.droplet}</div></div>
                     </div>`;
             } else {
-                const winner = p1.vp > p2.vp ? p1 : (p2.vp > p1.vp ? p2 : p1); // Simplified tie breaker
+                const winner = p1.vp > p2.vp ? p1 : (p2.vp > p1.vp ? p2 : p1);
                 const isTie = p1.vp === p2.vp;
                 
                 stats.innerHTML = `<div class="text-xs text-amber-400 uppercase tracking-widest font-bold">Winner</div>
