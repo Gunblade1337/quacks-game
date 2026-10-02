@@ -800,6 +800,9 @@
                 p.exploded = false; p.finished = false; p.explosionChoice = null;
                 p.greenSpiderUses = 0; p.blueSafetyTokens = 0; p.explodedProtected = false;
                 p.pendingGreenRewards = []; p.green3Triggered = false;
+                
+                // Clear any lingering set-aside chips back to the bag
+                p.asideRedChips = []; 
 
                 if (activeFortuneCard && activeFortuneCard.id === 'feast') {
                     const whiteChip = { color: 'white', val: 1, name: 'White 1' };
@@ -818,7 +821,6 @@
                 updateControlsState();
             }
 
-            // Run active AI turns automatically
             processAITurns();
         }
 
@@ -1084,15 +1086,20 @@
 
         function resolveRedAction(pIdx, chipIdx, action) {
             const p = players[pIdx];
+            
+            // Remove the chip from the set-aside zone
             const chip = p.asideRedChips.splice(chipIdx, 1)[0];
             
             if (action === 'place') {
+                // Add it to the pot permanently
                 p.currentSpace = Math.min(33, p.currentSpace + chip.val);
                 p.drawnChips.push({ ...chip, space: p.currentSpace });
                 playSound('draw');
             } else if (action === 'bag') {
-                p.bag.push(chip);
+                // Do nothing! By simply splicing it out of asideRedChips above, 
+                // getUndrawnBag() will automatically see it as back in the bag.
             }
+            
             renderAll();
             
             if (p.asideRedChips.length === 0) finishRedResolution(pIdx);
@@ -1420,11 +1427,23 @@
 
         function getUndrawnBag(p) {
             let tempBag = [...p.bag];
+            
+            // Subtract chips already in the pot
             p.drawnChips.forEach(drawn => {
                 const idx = tempBag.findIndex(c => c.color === drawn.color && c.val === drawn.val);
                 if (idx !== -1) tempBag.splice(idx, 1);
             });
+            
+            // Subtract chips set aside (like Set 2 Red Toadstools)
+            if (p.asideRedChips) {
+                p.asideRedChips.forEach(aside => {
+                    const idx = tempBag.findIndex(c => c.color === aside.color && c.val === aside.val);
+                    if (idx !== -1) tempBag.splice(idx, 1);
+                });
+            }
+            
             return tempBag;
+        }
         }
 
         function getTrackCoords() {
