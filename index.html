@@ -32,7 +32,7 @@
 
     <!-- Version Badge -->
     <div class="fixed bottom-2 right-3 text-[10px] font-mono text-slate-500 pointer-events-none select-none z-30">
-        v1.2.0 (Survival & Analytics)
+        v1.2.1
     </div>
 
     <!-- PEEK BOARD RETURN BUTTON -->
@@ -851,10 +851,8 @@
                 let bustChips = available.filter(c => c.color === 'white' && c.val > safeRemaining).length;
                 let bustOdds = (bustChips / available.length) * 100;
 
-                // Track expected bust odds for luck metric
                 p.stats.expectedBustAccumulator += (bustOdds / 100);
 
-                // AI Risk Tolerance (Stops around ~35% bust chance)
                 if (bustOdds > 35 && p.whiteSum >= 5) {
                     p.finished = true;
                     logEvent(`🤖 ${p.name} stopped drawing at Space ${p.currentSpace} (${Math.round(bustOdds)}% bust risk).`);
@@ -866,7 +864,6 @@
                 p.stats.totalDraws++;
                 executeChipPlacement(pIdx, chip);
 
-                // AI Potion Usage
                 if (p.exploded && p.potionFull) {
                     const last = p.drawnChips[p.drawnChips.length - 1];
                     if (last && last.color === 'white') {
@@ -1091,15 +1088,12 @@
             const chip = p.asideRedChips.splice(chipIdx, 1)[0];
             
             if (action === 'place') {
-                // Add it to the pot permanently
                 p.currentSpace = Math.min(33, p.currentSpace + chip.val);
                 p.drawnChips.push({ ...chip, space: p.currentSpace });
                 playSound('draw');
             } else if (action === 'bag') {
-                // Do nothing! By simply splicing it out of asideRedChips above, 
-                // getUndrawnBag() will automatically see it as back in the bag.
+                // Do nothing! By splicing it out of asideRedChips, getUndrawnBag will see it as back in the bag.
             }
-            
             renderAll();
             
             if (p.asideRedChips.length === 0) finishRedResolution(pIdx);
@@ -1377,6 +1371,24 @@
             pendingDropletContext = null;
         }
 
+        function getUndrawnBag(p) {
+            let tempBag = [...p.bag];
+            
+            p.drawnChips.forEach(drawn => {
+                const idx = tempBag.findIndex(c => c.color === drawn.color && c.val === drawn.val);
+                if (idx !== -1) tempBag.splice(idx, 1);
+            });
+            
+            if (p.asideRedChips) {
+                p.asideRedChips.forEach(aside => {
+                    const idx = tempBag.findIndex(c => c.color === aside.color && c.val === aside.val);
+                    if (idx !== -1) tempBag.splice(idx, 1);
+                });
+            }
+            
+            return tempBag;
+        }
+
         function updateBustMeter(pIdx) {
             const p = players[pIdx];
             const yellowCount = p.drawnChips.filter(c => c.color === 'yellow').length;
@@ -1423,27 +1435,6 @@
                     controlsEl.className = isActive ? "space-y-2" : "space-y-2 opacity-50 pointer-events-none";
                 }
             });
-        }
-
-        function getUndrawnBag(p) {
-            let tempBag = [...p.bag];
-            
-            // Subtract chips already in the pot
-            p.drawnChips.forEach(drawn => {
-                const idx = tempBag.findIndex(c => c.color === drawn.color && c.val === drawn.val);
-                if (idx !== -1) tempBag.splice(idx, 1);
-            });
-            
-            // Subtract chips set aside (like Set 2 Red Toadstools)
-            if (p.asideRedChips) {
-                p.asideRedChips.forEach(aside => {
-                    const idx = tempBag.findIndex(c => c.color === aside.color && c.val === aside.val);
-                    if (idx !== -1) tempBag.splice(idx, 1);
-                });
-            }
-            
-            return tempBag;
-        }
         }
 
         function getTrackCoords() {
